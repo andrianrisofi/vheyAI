@@ -1,5 +1,5 @@
 import heroArt from '../assets/hero.png';
-import { ChainIcon, SparkIcon, UploadIcon } from './Icons';
+import { SparkIcon } from './Icons';
 
 const HeroSection = () => {
   return (
@@ -21,19 +21,9 @@ const HeroSection = () => {
         </div>
       </div>
 
-      <div className="hero-visual" aria-label="Vhey storage visual">
+      <div className="hero-visual" aria-label="Vhey portrait refraction artwork">
         <div className="hero-panel">
           <img src={heroArt} alt="" className="hero-art" />
-          <div className="hero-status">
-            <div className="status-row">
-              <UploadIcon className="icon" />
-              <span>Image generated</span>
-            </div>
-            <div className="status-row">
-              <ChainIcon className="icon" />
-              <span>Shelby blob ready</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -100,48 +90,27 @@ const HeroSection = () => {
           justify-content: center;
           border: 1px solid var(--border);
           border-radius: 18px;
-          background:
-            linear-gradient(180deg, rgba(255,255,255,0.06), transparent),
-            rgba(15, 23, 34, 0.72);
+          background: rgba(15, 23, 34, 0.72);
           box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 28px 90px rgba(0,0,0,0.36);
           overflow: hidden;
         }
         .hero-panel::before {
           content: '';
           position: absolute;
-          inset: 22px;
-          border: 1px solid rgba(92, 200, 255, 0.16);
-          border-radius: 12px;
+          inset: 0;
+          background:
+            linear-gradient(180deg, rgba(255,255,255,0.08), transparent 42%),
+            radial-gradient(circle at 72% 22%, rgba(82, 224, 179, 0.18), transparent 34%);
+          pointer-events: none;
+          z-index: 1;
         }
         .hero-art {
-          width: 250px;
-          height: auto;
-          filter: drop-shadow(0 24px 40px rgba(92, 200, 255, 0.16));
-        }
-        .hero-status {
-          position: absolute;
-          left: 24px;
-          right: 24px;
-          bottom: 24px;
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-        }
-        .status-row {
-          display: flex;
-          align-items: center;
-          gap: 9px;
-          padding: 10px;
-          border-radius: var(--radius-sm);
-          background: rgba(8, 13, 20, 0.62);
-          border: 1px solid var(--border);
-          color: var(--text);
-          font-size: 13px;
-          font-weight: 700;
-        }
-        .status-row .icon {
-          color: var(--blue);
-          flex-shrink: 0;
+          width: 100%;
+          height: 100%;
+          min-height: 430px;
+          object-fit: cover;
+          object-position: center;
+          filter: saturate(1.04) contrast(1.02);
         }
 
         @media (max-width: 968px) {
