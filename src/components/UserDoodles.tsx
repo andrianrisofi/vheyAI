@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
-import { useAccountBlobs, useShelbyClient } from '@shelby-protocol/react';
+import { useAccountBlobs, useDeleteBlobs, useShelbyClient } from '@shelby-protocol/react';
 import type { BlobMetadata, ShelbyClient } from '@shelby-protocol/sdk/browser';
 import { devLogger } from '../utils/logger';
 
@@ -111,16 +111,62 @@ const BlobPreview = ({ accountAddress, blobName, client }: BlobPreviewProps) => 
 };
 
 const UserDoodles = () => {
-  const { connected, account } = useWallet();
+  const walletAdapter = useWallet();
+  const { connected, account } = walletAdapter;
   const shelbyClient = useShelbyClient();
+  const [pendingDeleteBlob, setPendingDeleteBlob] = useState<string | null>(null);
+  const [deletedBlobNames, setDeletedBlobNames] = useState<Set<string>>(() => new Set());
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const walletAddress = account?.address?.toString() ?? '';
 
-  const { data: blobs, isLoading } = useAccountBlobs({
+  const { data: blobs, isLoading, refetch } = useAccountBlobs({
     client: shelbyClient,
     account: walletAddress,
     enabled: connected && !!walletAddress,
   });
+  const deleteBlobs = useDeleteBlobs({
+    client: shelbyClient,
+    onError: (error) => {
+      devLogger.error('Delete blob error:', error);
+      setStatusMessage(error.message);
+      setPendingDeleteBlob(null);
+    },
+    onSuccess: ({ hash }) => {
+      if (pendingDeleteBlob) {
+        setDeletedBlobNames((current) => new Set(current).add(pendingDeleteBlob));
+        localStorage.removeItem(`vhey-blob-mime-${pendingDeleteBlob}`);
+      }
+
+      setStatusMessage(`Deleted from Shelby. Tx: ${hash.slice(0, 10)}...`);
+      setPendingDeleteBlob(null);
+      void refetch();
+    },
+  });
+
+  const visibleBlobs = blobs?.filter((blob) => !blob.isDeleted && !deletedBlobNames.has(blob.blobNameSuffix)) ?? [];
+
+  const handleDeleteBlob = (blobName: string) => {
+    if (!connected || !account?.address) {
+      setStatusMessage('Connect your Aptos wallet before deleting from Shelby.');
+      return;
+    }
+
+    if (pendingDeleteBlob === blobName) {
+      setStatusMessage(null);
+      deleteBlobs.mutate({
+        signer: {
+          account: account.address.toString(),
+          signAndSubmitTransaction: walletAdapter.signAndSubmitTransaction,
+        },
+        blobNames: [blobName],
+      });
+      return;
+    }
+
+    setPendingDeleteBlob(blobName);
+    setStatusMessage('Confirm delete on the selected card. Shelby deletes are permanent.');
+  };
 
   if (!connected) return null;
 
@@ -128,16 +174,19 @@ const UserDoodles = () => {
     <section id="my-doodles" className="user-doodles-section">
       <div className="section-container">
         <h2 className="font-display section-title">My <span className="gradient-text">Refractions</span></h2>
+        {statusMessage && <p className="delete-status">{statusMessage}</p>}
 
         {isLoading ? (
           <div className="loading-state">
             <span className="spinner"></span>
             <p>Scanning the blockchain for your art...</p>
           </div>
-        ) : blobs && blobs.length > 0 ? (
+        ) : visibleBlobs.length > 0 ? (
           <div className="doodles-grid">
-            {blobs.map((blob: BlobMetadata) => {
+            {visibleBlobs.map((blob: BlobMetadata) => {
               const blobName = blob.blobNameSuffix;
+              const isConfirmingDelete = pendingDeleteBlob === blobName;
+              const isDeleting = deleteBlobs.isPending && isConfirmingDelete;
 
               return (
                 <div key={`${blob.owner.toString()}-${blobName}`} className="doodle-card glass-card">
@@ -161,6 +210,26 @@ const UserDoodles = () => {
                     >
                       View on Shelby Explorer
                     </a>
+                    <button
+                      type="button"
+                      className={`delete-blob-button ${isConfirmingDelete ? 'confirming' : ''}`}
+                      onClick={() => handleDeleteBlob(blobName)}
+                      disabled={deleteBlobs.isPending}
+                    >
+                      {isDeleting ? 'Deleting...' : isConfirmingDelete ? 'Confirm Delete' : 'Delete'}
+                    </button>
+                    {isConfirmingDelete && !deleteBlobs.isPending && (
+                      <button
+                        type="button"
+                        className="cancel-delete-button"
+                        onClick={() => {
+                          setPendingDeleteBlob(null);
+                          setStatusMessage(null);
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -186,7 +255,13 @@ const UserDoodles = () => {
         }
         .section-title {
           font-size: 42px;
-          margin-bottom: 40px;
+          margin-bottom: 14px;
+        }
+        .delete-status {
+          color: var(--text-muted);
+          font-weight: 700;
+          margin: 0 auto 28px;
+          max-width: 560px;
         }
         .loading-state, .empty-state {
           padding: 60px;
@@ -240,6 +315,8 @@ const UserDoodles = () => {
           margin-top: 15px;
           border-top: 1px solid var(--border);
           padding-top: 12px;
+          display: grid;
+          gap: 8px;
         }
         .explorer-link {
           font-size: 12px;
@@ -250,6 +327,38 @@ const UserDoodles = () => {
         }
         .explorer-link:hover {
           opacity: 0.7;
+        }
+        .delete-blob-button,
+        .cancel-delete-button {
+          width: 100%;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          padding: 9px 10px;
+          background: rgba(255, 255, 255, 0.04);
+          color: var(--text-muted);
+          font-size: 12px;
+          font-weight: 800;
+          cursor: pointer;
+          transition: border-color 0.2s, color 0.2s, background 0.2s;
+        }
+        .delete-blob-button:hover:not(:disabled) {
+          border-color: rgba(248, 113, 113, 0.65);
+          color: #fecaca;
+          background: rgba(248, 113, 113, 0.1);
+        }
+        .delete-blob-button.confirming {
+          border-color: rgba(248, 113, 113, 0.75);
+          color: #fecaca;
+          background: rgba(248, 113, 113, 0.14);
+        }
+        .delete-blob-button:disabled,
+        .cancel-delete-button:disabled {
+          cursor: not-allowed;
+          opacity: 0.65;
+        }
+        .cancel-delete-button:hover {
+          border-color: var(--border-strong);
+          color: var(--text);
         }
         .doodle-name {
           font-weight: 800;
