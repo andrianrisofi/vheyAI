@@ -6,7 +6,7 @@ type RGB = {
 
 const clamp = (value: number) => Math.max(0, Math.min(255, value));
 
-const toColor = ({ r, g, b }: RGB) => `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
+const toRgb = ({ r, g, b }: RGB) => `rgb(${Math.round(r)}, ${Math.round(g)}, ${Math.round(b)})`;
 
 const mix = (color: RGB, target: RGB, amount: number): RGB => ({
   r: clamp(color.r + ((target.r - color.r) * amount)),
@@ -14,46 +14,28 @@ const mix = (color: RGB, target: RGB, amount: number): RGB => ({
   b: clamp(color.b + ((target.b - color.b) * amount)),
 });
 
-const hashText = (text: string) => {
-  let hash = 2166136261;
+const quantize = (value: number, steps = 6) => Math.round(value / (255 / steps)) * (255 / steps);
 
-  for (let i = 0; i < text.length; i += 1) {
-    hash ^= text.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-
-  return hash >>> 0;
-};
-
-const createRandom = (seed: number) => {
-  let state = seed || 1;
-
-  return () => {
-    state = Math.imul(1664525, state) + 1013904223;
-    return ((state >>> 0) / 4294967296);
-  };
-};
-
-const colorMoodFromPrompt = (prompt: string) => {
+const colorMoodFromPrompt = (prompt: string): RGB => {
   const lowerPrompt = prompt.toLowerCase();
 
   if (lowerPrompt.includes('pink') || lowerPrompt.includes('cute') || lowerPrompt.includes('girl')) {
-    return { r: 239, g: 130, b: 190 };
+    return { r: 236, g: 132, b: 190 };
   }
 
   if (lowerPrompt.includes('blue') || lowerPrompt.includes('cyber') || lowerPrompt.includes('future')) {
-    return { r: 100, g: 213, b: 224 };
+    return { r: 96, g: 213, b: 228 };
   }
 
   if (lowerPrompt.includes('green') || lowerPrompt.includes('nature')) {
-    return { r: 72, g: 212, b: 68 };
+    return { r: 80, g: 214, b: 112 };
   }
 
   if (lowerPrompt.includes('gold') || lowerPrompt.includes('warm')) {
-    return { r: 217, g: 176, b: 82 };
+    return { r: 232, g: 178, b: 78 };
   }
 
-  return { r: 176, g: 107, b: 224 };
+  return { r: 176, g: 108, b: 226 };
 };
 
 const loadImageFromFile = (file: File) => new Promise<HTMLImageElement>((resolve, reject) => {
@@ -71,240 +53,164 @@ const loadImageFromFile = (file: File) => new Promise<HTMLImageElement>((resolve
   image.src = url;
 });
 
-const getImagePalette = (image: HTMLImageElement) => {
-  const sampleSize = 96;
-  const canvas = document.createElement('canvas');
-  canvas.width = sampleSize;
-  canvas.height = sampleSize;
-
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  if (!ctx) throw new Error('Canvas is not available in this browser.');
-
-  const scale = Math.max(sampleSize / image.naturalWidth, sampleSize / image.naturalHeight);
-  const width = image.naturalWidth * scale;
-  const height = image.naturalHeight * scale;
-  ctx.drawImage(image, (sampleSize - width) / 2, (sampleSize - height) / 2, width, height);
-
-  const data = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
-  const skinPixels: RGB[] = [];
-  const hairPixels: RGB[] = [];
-  const accentPixels: RGB[] = [];
-
-  for (let y = 0; y < sampleSize; y += 1) {
-    for (let x = 0; x < sampleSize; x += 1) {
-      const index = (y * sampleSize + x) * 4;
-      const pixel = { r: data[index], g: data[index + 1], b: data[index + 2] };
-      const brightness = (pixel.r + pixel.g + pixel.b) / 3;
-      const saturation = Math.max(pixel.r, pixel.g, pixel.b) - Math.min(pixel.r, pixel.g, pixel.b);
-      const isWarm = pixel.r > pixel.b * 1.04 && pixel.g > pixel.b * 0.72;
-
-      if (brightness > 55 && brightness < 235 && isWarm) {
-        skinPixels.push(pixel);
-      }
-
-      if (y < sampleSize * 0.68 && brightness > 18 && brightness < 142) {
-        hairPixels.push(pixel);
-      }
-
-      if (saturation > 38 && brightness > 45 && brightness < 230) {
-        accentPixels.push(pixel);
-      }
-    }
-  }
-
-  const average = (pixels: RGB[], fallback: RGB) => {
-    if (!pixels.length) return fallback;
-
-    const sum = pixels.reduce<RGB>((acc, pixel) => ({
-      r: acc.r + pixel.r,
-      g: acc.g + pixel.g,
-      b: acc.b + pixel.b,
-    }), { r: 0, g: 0, b: 0 });
-
-    return {
-      r: sum.r / pixels.length,
-      g: sum.g / pixels.length,
-      b: sum.b / pixels.length,
-    };
-  };
+const getCoverRect = (image: HTMLImageElement, width: number, height: number) => {
+  const scale = Math.max(width / image.naturalWidth, height / image.naturalHeight);
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
 
   return {
-    skin: mix(average(skinPixels, { r: 226, g: 168, b: 118 }), { r: 248, g: 192, b: 143 }, 0.25),
-    hair: mix(average(hairPixels, { r: 95, g: 55, b: 32 }), { r: 42, g: 25, b: 18 }, 0.18),
-    accent: average(accentPixels, { r: 190, g: 112, b: 215 }),
+    x: (width - drawWidth) / 2,
+    y: (height - drawHeight) / 2,
+    width: drawWidth,
+    height: drawHeight,
   };
 };
 
-const drawEllipse = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  radiusX: number,
-  radiusY: number,
-  color: string,
-  stroke = '#08060d',
-  lineWidth = 11,
-) => {
-  ctx.fillStyle = color;
-  ctx.strokeStyle = stroke;
-  ctx.lineWidth = lineWidth;
-  ctx.beginPath();
-  ctx.ellipse(x, y, radiusX, radiusY, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-};
+const averageColor = (data: Uint8ClampedArray): RGB => {
+  let r = 0;
+  let g = 0;
+  let b = 0;
+  let count = 0;
 
-const drawHair = (
-  ctx: CanvasRenderingContext2D,
-  hairColor: string,
-  variant: number,
-  mood: RGB,
-) => {
-  ctx.fillStyle = hairColor;
-  ctx.strokeStyle = '#08060d';
-  ctx.lineWidth = 12;
-  ctx.lineJoin = 'round';
-  ctx.lineCap = 'round';
-
-  if (variant === 0) {
-    ctx.beginPath();
-    ctx.moveTo(246, 414);
-    ctx.bezierCurveTo(270, 250, 410, 176, 584, 210);
-    ctx.bezierCurveTo(742, 238, 820, 352, 792, 512);
-    ctx.bezierCurveTo(746, 440, 690, 424, 620, 406);
-    ctx.bezierCurveTo(528, 382, 430, 378, 322, 470);
-    ctx.bezierCurveTo(318, 432, 294, 416, 246, 414);
-    ctx.fill();
-    ctx.stroke();
-  } else if (variant === 1) {
-    ctx.beginPath();
-    ctx.moveTo(254, 484);
-    ctx.bezierCurveTo(222, 308, 364, 168, 544, 186);
-    ctx.bezierCurveTo(732, 204, 836, 348, 792, 536);
-    ctx.bezierCurveTo(728, 428, 616, 406, 500, 406);
-    ctx.bezierCurveTo(378, 406, 318, 440, 254, 484);
-    ctx.fill();
-    ctx.stroke();
-
-    for (let i = 0; i < 7; i += 1) {
-      ctx.beginPath();
-      ctx.moveTo(330 + (i * 58), 292 + ((i % 2) * 20));
-      ctx.quadraticCurveTo(360 + (i * 48), 374, 306 + (i * 64), 420);
-      ctx.stroke();
+  for (let i = 0; i < data.length; i += 16) {
+    const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
+    if (brightness > 24 && brightness < 244) {
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+      count += 1;
     }
-  } else {
-    ctx.beginPath();
-    ctx.moveTo(288, 402);
-    ctx.bezierCurveTo(300, 248, 448, 166, 606, 214);
-    ctx.bezierCurveTo(736, 254, 796, 352, 778, 494);
-    ctx.bezierCurveTo(696, 372, 570, 348, 450, 374);
-    ctx.bezierCurveTo(388, 388, 342, 426, 288, 402);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = toColor(mix(mood, { r: 255, g: 255, b: 255 }, 0.12));
-    ctx.beginPath();
-    ctx.moveTo(322, 320);
-    ctx.bezierCurveTo(422, 254, 540, 250, 654, 304);
-    ctx.bezierCurveTo(558, 286, 456, 300, 356, 362);
-    ctx.fill();
   }
+
+  if (!count) return { r: 148, g: 112, b: 178 };
+
+  return {
+    r: r / count,
+    g: g / count,
+    b: b / count,
+  };
 };
 
-const drawEyes = (ctx: CanvasRenderingContext2D, variant: number) => {
-  const eyeY = 500 + (variant === 1 ? 18 : 0);
-  const leftX = 418;
-  const rightX = 604;
-  const eyeHeight = variant === 2 ? 42 : 62;
-
-  drawEllipse(ctx, leftX, eyeY, 58, eyeHeight, '#f8f7ee', '#08060d', 9);
-  drawEllipse(ctx, rightX, eyeY, 58, eyeHeight, '#f8f7ee', '#08060d', 9);
-
-  const pupilOffset = variant === 0 ? 12 : variant === 1 ? -10 : 0;
-  drawEllipse(ctx, leftX + pupilOffset, eyeY + 6, 18, 24, '#08060d', '#08060d', 3);
-  drawEllipse(ctx, rightX + pupilOffset, eyeY + 6, 18, 24, '#08060d', '#08060d', 3);
-
-  if (variant === 2) {
-    ctx.strokeStyle = '#08060d';
-    ctx.lineWidth = 10;
-    ctx.beginPath();
-    ctx.moveTo(342, 438);
-    ctx.quadraticCurveTo(408, 420, 470, 438);
-    ctx.moveTo(548, 438);
-    ctx.quadraticCurveTo(612, 420, 680, 438);
-    ctx.stroke();
-  }
-};
-
-const drawMouth = (ctx: CanvasRenderingContext2D, variant: number, mood: RGB) => {
-  ctx.strokeStyle = '#08060d';
-  ctx.lineWidth = 10;
-  ctx.lineJoin = 'round';
-
-  if (variant === 0) {
-    ctx.fillStyle = '#381221';
-    ctx.beginPath();
-    ctx.moveTo(462, 646);
-    ctx.quadraticCurveTo(522, 710, 596, 634);
-    ctx.quadraticCurveTo(526, 650, 462, 646);
-    ctx.fill();
-    ctx.stroke();
-  } else if (variant === 1) {
-    ctx.fillStyle = toColor(mix(mood, { r: 255, g: 94, b: 124 }, 0.45));
-    ctx.beginPath();
-    ctx.ellipse(526, 640, 38, 54, -0.15, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  } else {
-    ctx.beginPath();
-    ctx.moveTo(460, 648);
-    ctx.quadraticCurveTo(526, 612, 604, 650);
-    ctx.stroke();
-
-    ctx.fillStyle = '#f08aa9';
-    ctx.beginPath();
-    ctx.moveTo(566, 648);
-    ctx.quadraticCurveTo(610, 648, 620, 612);
-    ctx.quadraticCurveTo(586, 632, 566, 648);
-    ctx.fill();
-    ctx.stroke();
-  }
-};
-
-const drawNose = (ctx: CanvasRenderingContext2D) => {
-  ctx.strokeStyle = '#08060d';
-  ctx.lineWidth = 8;
-  ctx.lineCap = 'round';
-  ctx.beginPath();
-  ctx.moveTo(520, 536);
-  ctx.quadraticCurveTo(498, 594, 540, 590);
-  ctx.stroke();
-};
-
-const drawBackground = (ctx: CanvasRenderingContext2D, size: number) => {
-  ctx.fillStyle = '#111822';
+const drawDoodleBackground = (ctx: CanvasRenderingContext2D, size: number, mood: RGB, sourceAverage: RGB) => {
+  ctx.fillStyle = '#101721';
   ctx.fillRect(0, 0, size, size);
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.025)';
+  const wash = ctx.createRadialGradient(size * 0.5, size * 0.45, 80, size * 0.5, size * 0.5, size * 0.72);
+  wash.addColorStop(0, `rgba(${mood.r}, ${mood.g}, ${mood.b}, 0.18)`);
+  wash.addColorStop(0.68, `rgba(${sourceAverage.r}, ${sourceAverage.g}, ${sourceAverage.b}, 0.08)`);
+  wash.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = wash;
+  ctx.fillRect(0, 0, size, size);
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
   ctx.lineWidth = 1;
-  for (let i = 0; i < size; i += 42) {
+  for (let line = 0; line < size; line += 44) {
     ctx.beginPath();
-    ctx.moveTo(i, 0);
-    ctx.lineTo(i, size);
-    ctx.moveTo(0, i);
-    ctx.lineTo(size, i);
+    ctx.moveTo(line, 0);
+    ctx.lineTo(line, size);
+    ctx.moveTo(0, line);
+    ctx.lineTo(size, line);
     ctx.stroke();
   }
+};
+
+const posterizeImage = (imageData: ImageData, mood: RGB) => {
+  const { data } = imageData;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const brightness = (r + g + b) / 3;
+    const contrast = brightness < 118 ? -16 : 20;
+    const saturationBoost = 1.18;
+    const gray = brightness;
+
+    data[i] = clamp(quantize(gray + ((r - gray) * saturationBoost) + contrast + (mood.r * 0.035), 7));
+    data[i + 1] = clamp(quantize(gray + ((g - gray) * saturationBoost) + contrast + (mood.g * 0.03), 7));
+    data[i + 2] = clamp(quantize(gray + ((b - gray) * saturationBoost) + contrast + (mood.b * 0.035), 7));
+  }
+
+  return imageData;
+};
+
+const drawEdgeLines = (
+  ctx: CanvasRenderingContext2D,
+  imageData: ImageData,
+  xOffset: number,
+  yOffset: number,
+  width: number,
+  height: number,
+) => {
+  const { data } = imageData;
+  ctx.save();
+  ctx.strokeStyle = '#08060d';
+  ctx.lineWidth = 3.2;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.globalAlpha = 0.82;
+
+  for (let y = 2; y < height - 4; y += 5) {
+    for (let x = 2; x < width - 4; x += 5) {
+      const index = (y * width + x) * 4;
+      const rightIndex = (y * width + x + 4) * 4;
+      const downIndex = ((y + 4) * width + x) * 4;
+      const current = data[index] + data[index + 1] + data[index + 2];
+      const right = data[rightIndex] + data[rightIndex + 1] + data[rightIndex + 2];
+      const down = data[downIndex] + data[downIndex + 1] + data[downIndex + 2];
+      const edge = Math.abs(current - right) + Math.abs(current - down);
+
+      if (edge > 92) {
+        ctx.beginPath();
+        ctx.moveTo(xOffset + x - 3, yOffset + y);
+        ctx.quadraticCurveTo(xOffset + x + 2, yOffset + y + 2, xOffset + x + 7, yOffset + y + 1);
+        ctx.stroke();
+      }
+    }
+  }
+
+  ctx.restore();
+};
+
+const drawHandmadeFrame = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number) => {
+  ctx.save();
+  ctx.strokeStyle = '#07050d';
+  ctx.lineWidth = 11;
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.roundRect(x, y, width, height, 42);
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.07)';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.roundRect(x + 11, y + 11, width - 22, height - 22, 32);
+  ctx.stroke();
+  ctx.restore();
 };
 
 export const generateDoodle = async (prompt: string, sourceFile: File) => {
   const size = 1024;
+  const artSize = 820;
+  const artX = (size - artSize) / 2;
+  const artY = 82;
   const image = await loadImageFromFile(sourceFile);
-  const palette = getImagePalette(image);
   const mood = colorMoodFromPrompt(prompt);
-  const seed = hashText(`${prompt}-${sourceFile.name}-${sourceFile.size}-${sourceFile.lastModified}`);
-  const random = createRandom(seed);
-  const variant = Math.floor(random() * 3);
+  const sourceCanvas = document.createElement('canvas');
+  sourceCanvas.width = artSize;
+  sourceCanvas.height = artSize;
+
+  const sourceCtx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+  if (!sourceCtx) throw new Error('Canvas is not available in this browser.');
+
+  const coverRect = getCoverRect(image, artSize, artSize);
+  sourceCtx.drawImage(image, coverRect.x, coverRect.y, coverRect.width, coverRect.height);
+
+  const sourceData = sourceCtx.getImageData(0, 0, artSize, artSize);
+  const sourceAverage = averageColor(sourceData.data);
+  const posterized = posterizeImage(sourceData, mood);
+  sourceCtx.putImageData(posterized, 0, 0);
+
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -312,38 +218,32 @@ export const generateDoodle = async (prompt: string, sourceFile: File) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Canvas is not available in this browser.');
 
-  drawBackground(ctx, size);
-
-  const skin = toColor(mix(palette.skin, { r: 255, g: 214, b: 168 }, 0.18));
-  const hairBase = random() > 0.34 ? palette.hair : mix(palette.accent, mood, 0.42);
-  const hair = toColor(mix(hairBase, mood, 0.12));
+  drawDoodleBackground(ctx, size, mood, sourceAverage);
 
   ctx.save();
-  ctx.translate((random() - 0.5) * 26, (random() - 0.5) * 18);
-  ctx.rotate((random() - 0.5) * 0.08);
-
-  drawHair(ctx, hair, variant, mood);
-  drawEllipse(ctx, 286, 552, 58, 80, skin, '#08060d', 10);
-  drawEllipse(ctx, 746, 548, 62, 84, skin, '#08060d', 10);
-  drawEllipse(ctx, 512, 530, 260, 286, skin, '#08060d', 12);
-
-  ctx.fillStyle = 'rgba(80, 43, 28, 0.11)';
   ctx.beginPath();
-  ctx.ellipse(608, 606, 102, 132, -0.28, 0, Math.PI * 2);
-  ctx.fill();
+  ctx.roundRect(artX, artY, artSize, artSize, 40);
+  ctx.clip();
+  ctx.drawImage(sourceCanvas, artX, artY);
 
-  drawHair(ctx, hair, variant, mood);
-  drawEyes(ctx, variant);
-  drawNose(ctx);
-  drawMouth(ctx, Math.floor(random() * 3), mood);
-
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = 'rgba(16, 10, 28, 0.16)';
+  ctx.fillRect(artX, artY, artSize, artSize);
+  ctx.globalCompositeOperation = 'source-over';
   ctx.restore();
 
-  ctx.strokeStyle = 'rgba(126, 93, 166, 0.45)';
-  ctx.lineWidth = 3;
+  drawEdgeLines(ctx, posterized, artX, artY, artSize, artSize);
+  drawHandmadeFrame(ctx, artX, artY, artSize, artSize);
+
+  ctx.save();
+  ctx.fillStyle = toRgb(mix(mood, { r: 255, g: 255, b: 255 }, 0.16));
+  ctx.strokeStyle = '#08060d';
+  ctx.lineWidth = 8;
   ctx.beginPath();
-  ctx.roundRect(56, 56, 912, 912, 32);
+  ctx.ellipse(850, 160, 32, 28, -0.2, 0, Math.PI * 2);
+  ctx.fill();
   ctx.stroke();
+  ctx.restore();
 
   return canvas.toDataURL('image/png');
 };
