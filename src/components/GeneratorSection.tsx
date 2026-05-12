@@ -154,7 +154,7 @@ const GeneratorSection = () => {
     setLastTxHash(null);
 
     try {
-      const resultUrl = await generateDoodle(cleanPrompt);
+      const resultUrl = await generateDoodle(cleanPrompt, file);
       setGeneratedResult(resultUrl);
     } catch (err) {
       showNotice({
