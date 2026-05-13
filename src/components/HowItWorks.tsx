@@ -69,13 +69,7 @@ const HowItWorks = () => {
           text-align: center;
         }
         .section-label {
-          display: inline-block;
           color: var(--green);
-          font-size: 13px;
-          font-weight: 800;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          margin-bottom: 16px;
         }
         .how-title {
           max-width: 780px;
@@ -112,8 +106,8 @@ const HowItWorks = () => {
           height: 42px;
           border: 1px solid var(--border-strong);
           border-radius: var(--radius-sm);
-          color: var(--blue);
-          background: rgba(92, 200, 255, 0.08);
+          color: var(--pink-soft);
+          background: linear-gradient(135deg, rgba(255, 47, 146, 0.1), rgba(83, 240, 255, 0.05));
         }
         .step-number {
           color: rgba(238, 246, 251, 0.24);

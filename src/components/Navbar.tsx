@@ -141,8 +141,8 @@ const Navbar = ({ page }: NavbarProps) => {
           width: 30px;
           height: 30px;
           border-radius: 8px;
-          color: #071018;
-          background: linear-gradient(135deg, var(--green), var(--blue));
+          color: #170710;
+          background: linear-gradient(135deg, var(--pink), var(--cyan));
           font-size: 16px;
         }
         .nav-links {
@@ -156,7 +156,7 @@ const Navbar = ({ page }: NavbarProps) => {
           transition: color 0.3s;
         }
         .nav-links a:hover {
-          color: var(--blue);
+          color: var(--pink-soft);
         }
         .wallet-actions {
           display: flex;
@@ -176,7 +176,7 @@ const Navbar = ({ page }: NavbarProps) => {
           box-shadow: 0 0 8px var(--green);
         }
         .address-pill {
-          background: rgba(92, 200, 255, 0.08);
+          background: rgba(83, 240, 255, 0.08);
           padding: 6px 10px;
           border-radius: var(--radius-sm);
           font-size: 14px;
@@ -251,7 +251,7 @@ const Navbar = ({ page }: NavbarProps) => {
           transition: all 0.25s;
         }
         .wallet-item:hover {
-          background: rgba(92, 200, 255, 0.08);
+          background: rgba(255, 47, 146, 0.08);
           border-color: var(--border-strong);
         }
         .wallet-icon {
@@ -261,7 +261,7 @@ const Navbar = ({ page }: NavbarProps) => {
         }
         .wallet-arrow {
           margin-left: auto;
-          color: var(--blue);
+          color: var(--cyan);
         }
         .no-wallets {
           text-align: center;

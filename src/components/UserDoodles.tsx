@@ -320,7 +320,7 @@ const UserDoodles = () => {
         }
         .explorer-link {
           font-size: 12px;
-          color: var(--blue);
+          color: var(--cyan);
           text-decoration: none;
           font-weight: 700;
           transition: opacity 0.2s;
@@ -342,14 +342,14 @@ const UserDoodles = () => {
           transition: border-color 0.2s, color 0.2s, background 0.2s;
         }
         .delete-blob-button:hover:not(:disabled) {
-          border-color: rgba(248, 113, 113, 0.65);
-          color: #fecaca;
-          background: rgba(248, 113, 113, 0.1);
+          border-color: rgba(255, 91, 119, 0.65);
+          color: #ffd2dc;
+          background: rgba(255, 91, 119, 0.1);
         }
         .delete-blob-button.confirming {
-          border-color: rgba(248, 113, 113, 0.75);
-          color: #fecaca;
-          background: rgba(248, 113, 113, 0.14);
+          border-color: rgba(255, 91, 119, 0.75);
+          color: #ffd2dc;
+          background: rgba(255, 91, 119, 0.14);
         }
         .delete-blob-button:disabled,
         .cancel-delete-button:disabled {
@@ -374,8 +374,8 @@ const UserDoodles = () => {
         .spinner {
           width: 40px;
           height: 40px;
-          border: 4px solid rgba(168, 85, 247, 0.1);
-          border-top-color: var(--blue);
+          border: 4px solid rgba(255, 47, 146, 0.12);
+          border-top-color: var(--cyan);
           border-radius: 50%;
           animation: spin-slow 1s linear infinite;
           margin-bottom: 20px;

@@ -44,8 +44,8 @@ const HeroSection = () => {
           padding: 8px 10px;
           border: 1px solid var(--border);
           border-radius: var(--radius-sm);
-          color: var(--green);
-          background: rgba(82, 224, 179, 0.08);
+          color: var(--cyan);
+          background: linear-gradient(135deg, rgba(255, 47, 146, 0.12), rgba(83, 240, 255, 0.07));
           font-size: 13px;
           font-weight: 700;
           text-transform: uppercase;
@@ -90,8 +90,10 @@ const HeroSection = () => {
           justify-content: center;
           border: 1px solid var(--border);
           border-radius: 18px;
-          background: rgba(15, 23, 34, 0.72);
-          box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 28px 90px rgba(0,0,0,0.36);
+          background:
+            linear-gradient(145deg, rgba(255, 47, 146, 0.1), rgba(83, 240, 255, 0.035)),
+            rgba(15, 23, 34, 0.72);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 28px 90px rgba(255,47,146,0.12), 0 28px 90px rgba(0,0,0,0.36);
           overflow: hidden;
         }
         .hero-panel::before {
@@ -100,7 +102,8 @@ const HeroSection = () => {
           inset: 0;
           background:
             linear-gradient(180deg, rgba(255,255,255,0.08), transparent 42%),
-            radial-gradient(circle at 72% 22%, rgba(82, 224, 179, 0.18), transparent 34%);
+            radial-gradient(circle at 72% 22%, rgba(83, 240, 255, 0.18), transparent 34%),
+            radial-gradient(circle at 22% 88%, rgba(255, 47, 146, 0.18), transparent 28%);
           pointer-events: none;
           z-index: 1;
         }

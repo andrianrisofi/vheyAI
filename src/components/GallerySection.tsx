@@ -50,7 +50,7 @@ const GallerySection = () => {
           border-color: var(--border-strong);
         }
         .item-image {
-          background: rgba(255,255,255,0.03);
+          background: linear-gradient(135deg, rgba(255,47,146,0.05), rgba(83,240,255,0.03));
           border-radius: var(--radius-sm);
           padding: 20px;
           margin-bottom: 15px;
@@ -73,7 +73,7 @@ const GallerySection = () => {
         }
         .on-chain-tag {
           font-size: 12px;
-          background: rgba(52, 211, 153, 0.1);
+          background: rgba(32, 242, 196, 0.1);
           color: var(--green);
           padding: 4px 8px;
           border-radius: 10px;

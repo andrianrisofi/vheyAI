@@ -526,20 +526,20 @@ const GeneratorSection = () => {
           width: min(420px, calc(100vw - 32px));
           padding: 16px 18px;
           border-radius: var(--radius-sm);
-          background: rgba(26,20,48,0.94);
+          background: linear-gradient(135deg, rgba(255, 47, 146, 0.08), rgba(17, 19, 29, 0.94));
           border: 1px solid var(--border);
           box-shadow: 0 20px 60px rgba(0,0,0,0.35);
           backdrop-filter: blur(18px);
           animation: slide-up 0.25s ease forwards;
         }
         .app-toast-success {
-          border-color: rgba(52, 211, 153, 0.45);
+          border-color: rgba(32, 242, 196, 0.45);
         }
         .app-toast-error {
-          border-color: rgba(255, 107, 157, 0.55);
+          border-color: rgba(255, 91, 119, 0.55);
         }
         .app-toast-info {
-          border-color: rgba(96, 165, 250, 0.45);
+          border-color: rgba(83, 240, 255, 0.45);
         }
         .toast-title {
           margin-bottom: 4px;
@@ -592,7 +592,7 @@ const GeneratorSection = () => {
           transition: border-color 0.3s;
         }
         .prompt-input:focus {
-          border-color: var(--blue);
+          border-color: var(--pink);
         }
         .success-actions {
           display: flex;
@@ -608,7 +608,7 @@ const GeneratorSection = () => {
         }
         .tx-link {
           font-size: 12px;
-          color: var(--blue);
+          color: var(--cyan);
           text-decoration: none;
           font-weight: 700;
           opacity: 0.8;
@@ -619,7 +619,7 @@ const GeneratorSection = () => {
           text-decoration: underline;
         }
         .btn-accent {
-          background: linear-gradient(135deg, var(--yellow), var(--orange));
+          background: linear-gradient(135deg, var(--yellow), var(--orange), var(--pink));
           color: #071018;
         }
         .btn-accent:hover {
@@ -653,8 +653,8 @@ const GeneratorSection = () => {
           transition: all 0.3s;
         }
         .drop-zone:hover {
-          border-color: var(--blue);
-          background: rgba(92, 200, 255, 0.05);
+          border-color: var(--pink);
+          background: rgba(255, 47, 146, 0.06);
         }
         .upload-icon {
           display: inline-flex;
@@ -665,8 +665,8 @@ const GeneratorSection = () => {
           border: 1px solid var(--border-strong);
           border-radius: var(--radius-sm);
           margin-bottom: 15px;
-          color: var(--blue);
-          background: rgba(92, 200, 255, 0.08);
+          color: var(--cyan);
+          background: linear-gradient(135deg, rgba(255, 47, 146, 0.1), rgba(83, 240, 255, 0.08));
         }
         .upload-title {
           font-size: 18px;
@@ -704,7 +704,7 @@ const GeneratorSection = () => {
           text-align: center;
         }
         .result-badge {
-          background: linear-gradient(135deg, var(--blue), var(--green));
+          background: linear-gradient(135deg, var(--pink), var(--cyan), var(--green));
           color: #071018;
           padding: 8px 12px;
           border-radius: var(--radius-sm);

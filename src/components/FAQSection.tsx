@@ -35,7 +35,7 @@ const FAQSection = () => {
       <style>{`
         .faq-section {
           padding: 100px 20px;
-          background: rgba(13, 10, 26, 0.5);
+          background: linear-gradient(180deg, rgba(255, 47, 146, 0.04), rgba(83, 240, 255, 0.025));
         }
         .faq-container {
           max-width: 900px;
@@ -64,7 +64,7 @@ const FAQSection = () => {
         .faq-question {
           font-family: var(--font-display);
           font-size: 20px;
-          color: var(--blue);
+          color: var(--pink-soft);
           margin-bottom: 15px;
         }
         .faq-answer {

@@ -51,7 +51,7 @@ const UserStats = () => {
           margin: 20px auto;
           max-width: fit-content;
           border-radius: var(--radius);
-          border: 1px solid rgba(168, 85, 247, 0.2);
+          border: 1px solid rgba(255, 137, 202, 0.22);
           animation: slide-down 0.5s ease-out;
         }
         .stat-pill {
@@ -62,7 +62,7 @@ const UserStats = () => {
           font-size: 14px;
         }
         .stat-icon {
-          color: var(--blue);
+          color: var(--cyan);
           display: inline-flex;
         }
         .stat-value {

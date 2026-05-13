@@ -69,7 +69,7 @@ const Footer = ({ page }: FooterProps) => {
           margin-bottom: 20px;
           font-family: var(--font-display);
           font-size: 18px;
-          color: var(--blue);
+          color: var(--pink-soft);
         }
         .link-group a {
           display: block;
@@ -100,7 +100,7 @@ const Footer = ({ page }: FooterProps) => {
           transition: color 0.3s;
         }
         .social-links span:hover {
-          color: var(--blue);
+          color: var(--cyan);
         }
       `}</style>
     </footer>
