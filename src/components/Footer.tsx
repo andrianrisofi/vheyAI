@@ -31,9 +31,9 @@ const Footer = ({ page }: FooterProps) => {
         <div className="footer-bottom">
           <p>&copy; 2026 Vhey. Built on Aptos and Shelby.</p>
           <div className="social-links">
-            <span>Twitter</span>
-            <span>Discord</span>
-            <span>Github</span>
+            <a href="https://x.com/shelbyserves" target="_blank" rel="noreferrer">Twitter</a>
+            <a href="https://discord.gg/shelbyserves" target="_blank" rel="noreferrer">Discord</a>
+            <a href="https://github.com/andrianrisofi/vheyAI" target="_blank" rel="noreferrer">Github</a>
           </div>
         </div>
       </div>
@@ -95,11 +95,13 @@ const Footer = ({ page }: FooterProps) => {
           display: flex;
           gap: 20px;
         }
-        .social-links span {
+        .social-links a {
+          color: var(--text-muted);
+          text-decoration: none;
           cursor: pointer;
           transition: color 0.3s;
         }
-        .social-links span:hover {
+        .social-links a:hover {
           color: var(--cyan);
         }
       `}</style>
