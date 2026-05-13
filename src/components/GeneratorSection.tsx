@@ -4,6 +4,7 @@ import { useSignAndSubmitTransaction } from '@aptos-labs/react';
 import type { Signer } from '@shelby-protocol/react';
 import { useUploadBlobs, useShelbyClient } from '@shelby-protocol/react';
 import { generateDoodle } from '../utils/aiService';
+import { getProofIdFromBlobName, saveProof } from '../utils/proof';
 import { devLogger } from '../utils/logger';
 import { SparkIcon, UploadIcon } from './Icons';
 
@@ -14,6 +15,7 @@ type Notice = {
 };
 
 type ProofCard = {
+  id: string;
   imageBlobName: string;
   metadataBlobName: string;
   contentHash: string;
@@ -218,6 +220,7 @@ const GeneratorSection = () => {
       const blobName = `vhey/refractions/${refractionId}.${extension}`;
       const metadataBlobName = `vhey/refractions/${refractionId}.metadata.json`;
       const proofMetadata: ProofCard = {
+        id: getProofIdFromBlobName(blobName),
         imageBlobName: blobName,
         metadataBlobName,
         contentHash: `sha256:${contentHash}`,
@@ -250,6 +253,7 @@ const GeneratorSection = () => {
             setIsSaved(true);
             setSavedBlobName(blobName);
             setProofCard(proofMetadata);
+            saveProof(proofMetadata);
             localStorage.setItem(`vhey-blob-mime-${blobName}`, mimeType);
             localStorage.setItem(`vhey-blob-mime-${metadataBlobName}`, 'application/json');
             showNotice({
@@ -550,6 +554,9 @@ const GeneratorSection = () => {
                           className="tx-link"
                         >
                           View proof metadata on Shelby
+                        </a>
+                        <a href={`/proof/${proofCard.id}`} className="tx-link">
+                          Open public proof page
                         </a>
                       </div>
                     )}

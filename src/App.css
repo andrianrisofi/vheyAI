@@ -29,6 +29,108 @@ main {
   color: var(--text);
 }
 
+.proof-page {
+  max-width: 1040px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 72px 20px;
+}
+
+.proof-shell {
+  position: relative;
+  padding: 42px;
+}
+
+.proof-back {
+  position: absolute;
+  right: 28px;
+  top: 28px;
+  color: var(--cyan);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.proof-shell h1 {
+  font-size: 58px;
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.proof-summary {
+  color: var(--text-muted);
+  max-width: 640px;
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+
+.proof-status-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.proof-status-row span {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(32, 242, 196, 0.1);
+  color: var(--green);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.proof-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.proof-detail-grid div {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.035);
+  min-width: 0;
+}
+
+.proof-detail-grid dt {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.proof-detail-grid dd {
+  color: var(--text);
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.proof-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.proof-empty {
+  max-width: 580px;
+}
+
+.proof-empty h2 {
+  font-size: 34px;
+  margin-bottom: 12px;
+}
+
+.proof-empty p {
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 22px;
+}
+
 @media (max-width: 760px) {
   .app-intro {
     flex-direction: column;
@@ -38,5 +140,23 @@ main {
 
   .app-intro h1 {
     font-size: 38px;
+  }
+
+  .proof-shell {
+    padding: 28px;
+  }
+
+  .proof-back {
+    position: static;
+    display: inline-block;
+    margin-bottom: 22px;
+  }
+
+  .proof-shell h1 {
+    font-size: 42px;
+  }
+
+  .proof-detail-grid {
+    grid-template-columns: 1fr;
   }
 }

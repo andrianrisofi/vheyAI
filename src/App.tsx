@@ -9,12 +9,14 @@ import GallerySection from './components/GallerySection.tsx'
 import UserDoodles from './components/UserDoodles.tsx'
 import FAQSection from './components/FAQSection.tsx'
 import Footer from './components/Footer.tsx'
+import ProofPage from './components/ProofPage.tsx'
 import './App.css'
 
 function App() {
   const { connected } = useWallet()
   const hasConnectedInApp = useRef(false)
   const isAppPage = window.location.pathname === '/app'
+  const isProofPage = window.location.pathname.startsWith('/proof/')
 
   useEffect(() => {
     if (!isAppPage) return
@@ -45,6 +47,16 @@ function App() {
           <UserDoodles />
         </main>
         <Footer page="app" />
+      </div>
+    )
+  }
+
+  if (isProofPage) {
+    return (
+      <div className="app-root">
+        <Navbar page="landing" />
+        <ProofPage />
+        <Footer page="landing" />
       </div>
     )
   }
