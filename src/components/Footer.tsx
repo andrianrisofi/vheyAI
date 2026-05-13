@@ -1,4 +1,10 @@
-const Footer = () => {
+type FooterProps = {
+  page: 'landing' | 'app';
+};
+
+const Footer = ({ page }: FooterProps) => {
+  const isAppPage = page === 'app';
+
   return (
     <footer className="footer glass-card">
       <div className="footer-container">
@@ -10,9 +16,9 @@ const Footer = () => {
           <div className="footer-links">
             <div className="link-group">
               <h4>Product</h4>
-              <a href="#hero">Home</a>
-              <a href="#generator">Studio</a>
-              <a href="#gallery">Gallery</a>
+              <a href="/">Landing</a>
+              <a href="/app">Studio</a>
+              {!isAppPage && <a href="#gallery">Gallery</a>}
             </div>
             <div className="link-group">
               <h4>Technology</h4>

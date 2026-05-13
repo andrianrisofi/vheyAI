@@ -10,19 +10,39 @@ import Footer from './components/Footer.tsx'
 import './App.css'
 
 function App() {
+  const isAppPage = window.location.pathname === '/app'
+
+  if (isAppPage) {
+    return (
+      <div className="app-root">
+        <Navbar page="app" />
+        <UserStats />
+        <main className="app-shell">
+          <section className="app-intro">
+            <div>
+              <div className="section-label">Vhey Studio</div>
+              <h1 className="font-display">Generate, store, and manage Shelby refractions.</h1>
+            </div>
+            <a href="/" className="btn btn-secondary">Back to Landing</a>
+          </section>
+          <GeneratorSection />
+          <UserDoodles />
+        </main>
+        <Footer page="app" />
+      </div>
+    )
+  }
+
   return (
     <div className="app-root">
-      <Navbar />
-      <UserStats />
+      <Navbar page="landing" />
       <main>
         <HeroSection />
         <HowItWorks />
-        <GeneratorSection />
         <GallerySection />
-        <UserDoodles />
         <FAQSection />
       </main>
-      <Footer />
+      <Footer page="landing" />
     </div>
   )
 }

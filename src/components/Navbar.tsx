@@ -3,13 +3,18 @@ import { useState } from 'react';
 import { useNameFromAddress } from '@aptos-labs/react';
 import { WalletIcon } from './Icons';
 
-const Navbar = () => {
+type NavbarProps = {
+  page: 'landing' | 'app';
+};
+
+const Navbar = ({ page }: NavbarProps) => {
   const { connected, disconnect, account, wallets, connect } = useWallet();
   const [showModal, setShowModal] = useState(false);
+  const isAppPage = page === 'app';
   const walletAddress = account?.address?.toString();
   const { data: ansName } = useNameFromAddress({
-    address: walletAddress,
-    enabled: connected && !!walletAddress,
+    address: isAppPage ? walletAddress : undefined,
+    enabled: isAppPage && connected && !!walletAddress,
     retry: 1,
   });
 
@@ -27,14 +32,27 @@ const Navbar = () => {
           </div>
 
           <div className="nav-links">
-            <a href="#hero">Home</a>
-            <a href="#generator">Generate</a>
-            <a href="#gallery">Gallery</a>
-            {connected && <a href="#my-doodles">My Refractions</a>}
+            {isAppPage ? (
+              <>
+                <a href="/app#generator">Studio</a>
+                {connected && <a href="/app#my-doodles">My Refractions</a>}
+                <a href="/">Landing</a>
+              </>
+            ) : (
+              <>
+                <a href="#hero">Home</a>
+                <a href="#gallery">Gallery</a>
+                <a href="#faq">FAQ</a>
+              </>
+            )}
           </div>
 
           <div className="wallet-actions">
-            {connected ? (
+            {!isAppPage ? (
+              <a className="btn btn-primary" href="/app">
+                Open App
+              </a>
+            ) : connected ? (
               <div className="connected-wallet">
                 <span className="wallet-dot" />
                 <span className="address-pill">

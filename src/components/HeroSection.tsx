@@ -13,9 +13,9 @@ const HeroSection = () => {
           Generate a stylized character, store the artwork as a Shelby blob, and mint the result from the same Aptos wallet.
         </p>
         <div className="hero-cta">
-          <a href="#generator" className="btn btn-primary btn-lg">
+          <a href="/app" className="btn btn-primary btn-lg">
             <SparkIcon className="icon" />
-            Start Creating
+            Open App
           </a>
           <a href="#gallery" className="btn btn-secondary btn-lg">View Gallery</a>
         </div>
