@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react'
+import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import Navbar from './components/Navbar.tsx'
 import UserStats from './components/UserStats.tsx'
 import HeroSection from './components/HeroSection.tsx'
@@ -10,7 +12,22 @@ import Footer from './components/Footer.tsx'
 import './App.css'
 
 function App() {
+  const { connected } = useWallet()
+  const hasConnectedInApp = useRef(false)
   const isAppPage = window.location.pathname === '/app'
+
+  useEffect(() => {
+    if (!isAppPage) return
+
+    if (connected) {
+      hasConnectedInApp.current = true
+      return
+    }
+
+    if (hasConnectedInApp.current) {
+      window.location.assign('/')
+    }
+  }, [connected, isAppPage])
 
   if (isAppPage) {
     return (
@@ -23,7 +40,6 @@ function App() {
               <div className="section-label">Vhey Studio</div>
               <h1 className="font-display">Generate, store, and manage Shelby refractions.</h1>
             </div>
-            <a href="/" className="btn btn-secondary">Back to Landing</a>
           </section>
           <GeneratorSection />
           <UserDoodles />

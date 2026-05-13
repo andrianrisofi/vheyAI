@@ -38,7 +38,6 @@ const Navbar = ({ page }: NavbarProps) => {
               <>
                 <a href="/app#generator">Studio</a>
                 {connected && <a href="/app#my-doodles">My Refractions</a>}
-                <a href="/">Landing</a>
               </>
             ) : (
               <>
