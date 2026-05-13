@@ -41,6 +41,11 @@ const detectImageMimeType = (bytes: Uint8Array, blobName: string) => {
   return getStoredMimeType(blobName);
 };
 
+const isImageBlob = (blobName: string) => {
+  const lowerName = blobName.toLowerCase();
+  return ['.png', '.jpg', '.jpeg', '.webp', '.svg'].some((extension) => lowerName.endsWith(extension));
+};
+
 type BlobPreviewProps = {
   accountAddress: string;
   blobName: string;
@@ -144,7 +149,11 @@ const UserDoodles = () => {
     },
   });
 
-  const visibleBlobs = blobs?.filter((blob) => !blob.isDeleted && !deletedBlobNames.has(blob.blobNameSuffix)) ?? [];
+  const visibleBlobs = blobs?.filter((blob) => (
+    !blob.isDeleted
+    && !deletedBlobNames.has(blob.blobNameSuffix)
+    && isImageBlob(blob.blobNameSuffix)
+  )) ?? [];
 
   const handleDeleteBlob = (blobName: string) => {
     if (!connected || !account?.address) {

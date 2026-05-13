@@ -13,12 +13,31 @@ type Notice = {
   message: string;
 };
 
+type ProofCard = {
+  imageBlobName: string;
+  metadataBlobName: string;
+  contentHash: string;
+  creator: string;
+  prompt: string;
+  model: string;
+  createdAt: string;
+};
+
 const getErrorMessage = (error: unknown) => {
   return error instanceof Error ? error.message : 'Unknown error';
 };
 
 const getShelbyExplorerUrl = (blobName: string, accountAddress: string) => {
   return `https://shelby.xyz/explorer/blob/${encodeURI(blobName)}?account=${accountAddress}`;
+};
+
+const getShortHash = (hash: string) => `${hash.slice(0, 12)}...${hash.slice(-10)}`;
+
+const getSha256Hash = async (data: ArrayBuffer) => {
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
 };
 
 const getImageExtension = (contentType: string) => {
@@ -70,6 +89,7 @@ const GeneratorSection = () => {
   const [generatedResult, setGeneratedResult] = useState<string | null>(null);
   const [lastTxHash, setLastTxHash] = useState<string | null>(null);
   const [savedBlobName, setSavedBlobName] = useState<string | null>(null);
+  const [proofCard, setProofCard] = useState<ProofCard | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [isMinted, setIsMinted] = useState(false);
   const [createdCollectionKey, setCreatedCollectionKey] = useState<string | null>(null);
@@ -97,6 +117,7 @@ const GeneratorSection = () => {
     setIsSaved(false);
     setIsMinted(false);
     setSavedBlobName(null);
+    setProofCard(null);
     setLastTxHash(null);
   };
 
@@ -109,6 +130,7 @@ const GeneratorSection = () => {
       setIsSaved(false);
       setIsMinted(false);
       setSavedBlobName(null);
+      setProofCard(null);
       setLastTxHash(null);
     }
   };
@@ -123,6 +145,7 @@ const GeneratorSection = () => {
       setIsSaved(false);
       setIsMinted(false);
       setSavedBlobName(null);
+      setProofCard(null);
       setLastTxHash(null);
     }
   };
@@ -151,6 +174,7 @@ const GeneratorSection = () => {
     setIsSaved(false);
     setIsMinted(false);
     setSavedBlobName(null);
+    setProofCard(null);
     setLastTxHash(null);
 
     try {
@@ -185,10 +209,27 @@ const GeneratorSection = () => {
 
       const contentType = response.headers.get('content-type') ?? '';
       const arrayBuffer = await response.arrayBuffer();
+      const contentHash = await getSha256Hash(arrayBuffer);
       const blobData = new Uint8Array(arrayBuffer);
       const extension = getImageExtension(contentType);
       const mimeType = getImageMimeType(contentType, extension);
-      const blobName = `vhey/refractions/${Date.now()}.${extension}`;
+      const createdAt = new Date().toISOString();
+      const refractionId = Date.now();
+      const blobName = `vhey/refractions/${refractionId}.${extension}`;
+      const metadataBlobName = `vhey/refractions/${refractionId}.metadata.json`;
+      const proofMetadata: ProofCard = {
+        imageBlobName: blobName,
+        metadataBlobName,
+        contentHash: `sha256:${contentHash}`,
+        creator: account.address.toString(),
+        prompt: prompt.trim(),
+        model: 'dicebear/adventurer-refraction',
+        createdAt,
+      };
+      const metadataBlobData = new TextEncoder().encode(JSON.stringify({
+        schema: 'vhey.proof.v1',
+        ...proofMetadata,
+      }, null, 2));
       const expirationMicros = (Date.now() + 30 * 24 * 60 * 60 * 1000) * 1000;
       const signer: Signer = {
         account: account.address.toString(),
@@ -198,18 +239,23 @@ const GeneratorSection = () => {
       uploadBlobsMutation.mutate(
         {
           signer,
-          blobs: [{ blobName, blobData }],
+          blobs: [
+            { blobName, blobData },
+            { blobName: metadataBlobName, blobData: metadataBlobData },
+          ],
           expirationMicros,
         },
         {
           onSuccess: () => {
             setIsSaved(true);
             setSavedBlobName(blobName);
+            setProofCard(proofMetadata);
             localStorage.setItem(`vhey-blob-mime-${blobName}`, mimeType);
+            localStorage.setItem(`vhey-blob-mime-${metadataBlobName}`, 'application/json');
             showNotice({
               tone: 'success',
               title: 'Saved to Shelby',
-              message: 'Your doodle is now stored as a Shelby blob.',
+              message: 'Artwork and proof metadata are now stored on Shelby.',
             });
           },
         },
@@ -473,6 +519,40 @@ const GeneratorSection = () => {
                         View blob on Shelby Explorer
                       </a>
                     )}
+                    {proofCard && (
+                      <div className="proof-card">
+                        <div className="proof-card-header">
+                          <span>Proof Card</span>
+                          <span>Stored on Shelby</span>
+                        </div>
+                        <dl className="proof-grid">
+                          <div>
+                            <dt>Creator</dt>
+                            <dd>{`${proofCard.creator.slice(0, 6)}...${proofCard.creator.slice(-4)}`}</dd>
+                          </div>
+                          <div>
+                            <dt>Hash</dt>
+                            <dd title={proofCard.contentHash}>{getShortHash(proofCard.contentHash)}</dd>
+                          </div>
+                          <div>
+                            <dt>Model</dt>
+                            <dd>{proofCard.model}</dd>
+                          </div>
+                          <div>
+                            <dt>Created</dt>
+                            <dd>{new Date(proofCard.createdAt).toLocaleString()}</dd>
+                          </div>
+                        </dl>
+                        <a
+                          href={getShelbyExplorerUrl(proofCard.metadataBlobName, proofCard.creator)}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="tx-link"
+                        >
+                          View proof metadata on Shelby
+                        </a>
+                      </div>
+                    )}
                     {!isCollectionReady ? (
                       <button
                         className="btn btn-accent"
@@ -605,6 +685,50 @@ const GeneratorSection = () => {
           font-weight: 700;
           font-size: 14px;
           margin-bottom: 5px;
+        }
+        .proof-card {
+          width: min(100%, 520px);
+          margin: 4px auto 0;
+          padding: 16px;
+          border: 1px solid var(--border);
+          border-radius: var(--radius-sm);
+          background: linear-gradient(135deg, rgba(255,47,146,0.08), rgba(83,240,255,0.04));
+          text-align: left;
+        }
+        .proof-card-header {
+          display: flex;
+          justify-content: space-between;
+          gap: 12px;
+          margin-bottom: 14px;
+          color: var(--text);
+          font-weight: 900;
+          font-size: 13px;
+        }
+        .proof-card-header span:last-child {
+          color: var(--green);
+          font-size: 12px;
+        }
+        .proof-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+          margin-bottom: 12px;
+        }
+        .proof-grid dt {
+          color: var(--text-muted);
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-bottom: 4px;
+        }
+        .proof-grid dd {
+          color: var(--text);
+          font-size: 12px;
+          font-weight: 800;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .tx-link {
           font-size: 12px;
