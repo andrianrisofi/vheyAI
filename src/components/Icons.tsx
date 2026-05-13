@@ -2,6 +2,46 @@ type IconProps = {
   className?: string;
 };
 
+export const VheyMarkIcon = ({ className }: IconProps) => (
+  <svg className={className} viewBox="0 0 48 48" aria-hidden="true">
+    <defs>
+      <linearGradient id="vhey-mark-bg" x1="7" y1="6" x2="42" y2="43" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#ff2f92" />
+        <stop offset="0.48" stopColor="#ff89ca" />
+        <stop offset="1" stopColor="#53f0ff" />
+      </linearGradient>
+      <linearGradient id="vhey-mark-v" x1="14" y1="13" x2="34" y2="36" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#fff5fb" />
+        <stop offset="0.62" stopColor="#14111d" />
+        <stop offset="1" stopColor="#07090f" />
+      </linearGradient>
+    </defs>
+    <rect x="4" y="4" width="40" height="40" rx="11" fill="url(#vhey-mark-bg)" />
+    <path
+      d="M8 12.5C8 10 10 8 12.5 8H34L8 34V12.5Z"
+      fill="#fff5fb"
+      opacity="0.28"
+    />
+    <path
+      d="M13.6 15.2h7.1l4.1 15.1 4.7-15.1h6.9L28.5 35h-7.4L13.6 15.2Z"
+      fill="url(#vhey-mark-v)"
+    />
+    <path
+      d="M22.1 15.2h5.7l-2.9 8.9-2.8-8.9Z"
+      fill="#53f0ff"
+      opacity="0.65"
+    />
+    <path
+      d="M13.6 15.2h7.1l4.1 15.1 4.7-15.1h6.9"
+      fill="none"
+      stroke="#07090f"
+      strokeOpacity="0.35"
+      strokeWidth="1.2"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
 export const UploadIcon = ({ className }: IconProps) => (
   <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
     <path d="M12 15V4m0 0 4 4m-4-4-4 4" />

@@ -1,7 +1,7 @@
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useState } from 'react';
 import { useNameFromAddress } from '@aptos-labs/react';
-import { WalletIcon } from './Icons';
+import { VheyMarkIcon, WalletIcon } from './Icons';
 
 type NavbarProps = {
   page: 'landing' | 'app';
@@ -27,7 +27,9 @@ const Navbar = ({ page }: NavbarProps) => {
       <nav className="navbar glass-card">
         <div className="navbar-container">
           <div className="logo font-display">
-            <span className="logo-mark">V</span>
+            <span className="logo-mark">
+              <VheyMarkIcon className="logo-mark-icon" />
+            </span>
             Vhey
           </div>
 
@@ -138,12 +140,17 @@ const Navbar = ({ page }: NavbarProps) => {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 30px;
-          height: 30px;
-          border-radius: 8px;
-          color: #170710;
-          background: linear-gradient(135deg, var(--pink), var(--cyan));
-          font-size: 16px;
+          width: 32px;
+          height: 32px;
+          border-radius: 10px;
+          background: #0a0c13;
+          box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 10px 24px rgba(255, 47, 146, 0.24);
+          overflow: hidden;
+        }
+        .logo-mark-icon {
+          width: 32px;
+          height: 32px;
+          display: block;
         }
         .nav-links {
           display: flex;
