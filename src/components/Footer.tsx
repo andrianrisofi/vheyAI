@@ -11,7 +11,7 @@ const Footer = ({ page }: FooterProps) => {
         <div className="footer-main">
           <div className="footer-brand">
             <div className="logo font-display">Vhey</div>
-            <p>Creative storage and minting for Shelbynet refractions.</p>
+            <p>Creative storage and minting for Aptos Testnet refractions.</p>
           </div>
           <div className="footer-links">
             <div className="link-group">

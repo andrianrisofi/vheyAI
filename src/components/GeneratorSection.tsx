@@ -4,6 +4,7 @@ import { useSignAndSubmitTransaction } from '@aptos-labs/react';
 import type { Signer } from '@shelby-protocol/react';
 import { useUploadBlobs, useShelbyClient } from '@shelby-protocol/react';
 import { generateDoodle } from '../utils/aiService';
+import { APTOS_EXPLORER_NETWORK } from '../config/network';
 import { getProofIdFromBlobName, saveProof } from '../utils/proof';
 import { devLogger } from '../utils/logger';
 import { SparkIcon, UploadIcon } from './Icons';
@@ -579,7 +580,7 @@ const GeneratorSection = () => {
                     )}
                     {lastTxHash && (
                       <a
-                        href={`https://explorer.aptoslabs.com/txn/${lastTxHash}?network=shelbynet`}
+                        href={`https://explorer.aptoslabs.com/txn/${lastTxHash}?network=${APTOS_EXPLORER_NETWORK}`}
                         target="_blank"
                         rel="noreferrer"
                         className="tx-link"

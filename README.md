@@ -1,6 +1,6 @@
 # Vhey
 
-Vhey is a creative dapp on Shelbynet for turning portrait uploads into refraction-style artwork, storing the result with Shelby Protocol, and keeping a simple proof trail for each saved piece.
+Vhey is a creative dapp on Aptos Testnet for turning portrait uploads into refraction-style artwork, storing the result with Shelby Protocol, and keeping a simple proof trail for each saved piece.
 
 The project started as a small AI doodle experiment. It is now moving toward a verifiable media flow where the generated artwork, metadata, wallet, timestamp, and content hash are tied back to decentralized storage.
 
@@ -12,7 +12,7 @@ The project started as a small AI doodle experiment. It is now moving toward a v
 
 - Separate landing page and app studio.
 - Portrait upload and doodle/refraction generation.
-- Shelby blob upload on Shelbynet.
+- Shelby blob upload on Aptos Testnet.
 - Proof metadata JSON stored alongside the artwork.
 - Proof Card with creator, timestamp, model, and SHA-256 hash.
 - Shareable proof route at `/proof/:id`.
@@ -24,7 +24,7 @@ The project started as a small AI doodle experiment. It is now moving toward a v
 ## How It Works
 
 1. Open the app studio at `/app`.
-2. Connect an Aptos wallet on Shelbynet.
+2. Connect an Aptos wallet on Testnet.
 3. Upload an image and generate a refraction.
 4. Save the generated artwork to Shelby.
 5. Vhey stores both the artwork blob and a metadata blob.
