@@ -5,7 +5,7 @@ import type { BlobMetadata, ShelbyClient } from '@shelby-protocol/sdk/browser';
 import { devLogger } from '../utils/logger';
 
 const getShelbyExplorerUrl = (blobName: string, accountAddress: string) => {
-  return `https://shelby.xyz/explorer/blob/${encodeURI(blobName)}?account=${accountAddress}`;
+  return `https://explorer.shelby.xyz/testnet/blob/${encodeURI(blobName)}?account=${accountAddress}`;
 };
 
 const formatDate = (micros: number) => {

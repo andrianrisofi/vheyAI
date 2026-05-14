@@ -31,7 +31,7 @@ const getErrorMessage = (error: unknown) => {
 };
 
 const getShelbyExplorerUrl = (blobName: string, accountAddress: string) => {
-  return `https://shelby.xyz/explorer/blob/${encodeURI(blobName)}?account=${accountAddress}`;
+  return `https://explorer.shelby.xyz/testnet/blob/${encodeURI(blobName)}?account=${accountAddress}`;
 };
 
 const getShortHash = (hash: string) => `${hash.slice(0, 12)}...${hash.slice(-10)}`;
@@ -218,8 +218,8 @@ const GeneratorSection = () => {
       const mimeType = getImageMimeType(contentType, extension);
       const createdAt = new Date().toISOString();
       const refractionId = Date.now();
-      const blobName = `vhey/refractions/${refractionId}.${extension}`;
-      const metadataBlobName = `vhey/refractions/${refractionId}.metadata.json`;
+      const blobName = `Refraction/${refractionId}.${extension}`;
+      const metadataBlobName = `Refraction/${refractionId}.metadata.json`;
       const proofMetadata: ProofCard = {
         id: getProofIdFromBlobName(blobName),
         imageBlobName: blobName,

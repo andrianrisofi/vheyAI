@@ -1,7 +1,7 @@
 import { getProof } from '../utils/proof';
 
 const getShelbyExplorerUrl = (blobName: string, accountAddress: string) => {
-  return `https://shelby.xyz/explorer/blob/${encodeURI(blobName)}?account=${accountAddress}`;
+  return `https://explorer.shelby.xyz/testnet/blob/${encodeURI(blobName)}?account=${accountAddress}`;
 };
 
 const ProofPage = () => {
