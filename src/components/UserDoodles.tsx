@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useAccountBlobs, useDeleteBlobs, useShelbyClient } from '@shelby-protocol/react';
 import type { BlobMetadata, ShelbyClient } from '@shelby-protocol/sdk/browser';
+import { SHELBY_EXPLORER_NETWORK } from '../config/network';
 import { devLogger } from '../utils/logger';
 
 const getShelbyExplorerUrl = (blobName: string, accountAddress: string) => {
-  return `https://explorer.shelby.xyz/testnet/blob/${encodeURI(blobName)}?account=${accountAddress}`;
+  return `https://explorer.shelby.xyz/${SHELBY_EXPLORER_NETWORK}/blob/${encodeURI(blobName)}?account=${accountAddress}`;
 };
 
 const formatDate = (micros: number) => {

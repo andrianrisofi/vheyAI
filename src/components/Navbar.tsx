@@ -1,13 +1,16 @@
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useState } from 'react';
 import { useNameFromAddress } from '@aptos-labs/react';
+import type { AppView } from '../App';
 import { VheyMarkIcon, WalletIcon } from './Icons';
 
 type NavbarProps = {
   page: 'landing' | 'app';
+  appView?: AppView;
+  onAppViewChange?: (view: AppView) => void;
 };
 
-const Navbar = ({ page }: NavbarProps) => {
+const Navbar = ({ page, appView = 'studio', onAppViewChange }: NavbarProps) => {
   const { connected, disconnect, account, wallets, connect } = useWallet();
   const [showModal, setShowModal] = useState(false);
   const isAppPage = page === 'app';
@@ -36,8 +39,31 @@ const Navbar = ({ page }: NavbarProps) => {
           <div className="nav-links">
             {isAppPage ? (
               <>
-                <a href="/app#generator">Studio</a>
-                {connected && <a href="/app#my-doodles">My Refractions</a>}
+                <button
+                  type="button"
+                  className={appView === 'studio' ? 'active' : ''}
+                  onClick={() => onAppViewChange?.('studio')}
+                >
+                  Studio
+                </button>
+                {connected && (
+                  <button
+                    type="button"
+                    className={appView === 'refractions' ? 'active' : ''}
+                    onClick={() => onAppViewChange?.('refractions')}
+                  >
+                    My Refractions
+                  </button>
+                )}
+                {connected && (
+                  <button
+                    type="button"
+                    className={appView === 'market' ? 'active' : ''}
+                    onClick={() => onAppViewChange?.('market')}
+                  >
+                    Market
+                  </button>
+                )}
               </>
             ) : (
               <>
@@ -155,13 +181,20 @@ const Navbar = ({ page }: NavbarProps) => {
           display: flex;
           gap: 30px;
         }
-        .nav-links a {
+        .nav-links a,
+        .nav-links button {
           color: var(--text-muted);
           text-decoration: none;
           font-weight: 600;
           transition: color 0.3s;
+          border: 0;
+          background: transparent;
+          cursor: pointer;
+          font: inherit;
         }
-        .nav-links a:hover {
+        .nav-links a:hover,
+        .nav-links button:hover,
+        .nav-links button.active {
           color: var(--pink-soft);
         }
         .wallet-actions {

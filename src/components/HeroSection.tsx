@@ -5,7 +5,7 @@ const HeroSection = () => {
   return (
     <section id="hero" className="hero-section">
       <div className="hero-content slide-up">
-        <div className="hero-kicker">Aptos Testnet creative storage</div>
+        <div className="hero-kicker">Shelbynet creative storage</div>
         <h1 className="font-display hero-title">
           Turn portraits into collectible refractions.
         </h1>

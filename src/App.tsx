@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import Navbar from './components/Navbar.tsx'
 import UserStats from './components/UserStats.tsx'
@@ -7,14 +7,18 @@ import HowItWorks from './components/HowItWorks.tsx'
 import GeneratorSection from './components/GeneratorSection.tsx'
 import GallerySection from './components/GallerySection.tsx'
 import UserDoodles from './components/UserDoodles.tsx'
+import MarketplaceSection from './components/MarketplaceSection.tsx'
 import FAQSection from './components/FAQSection.tsx'
 import Footer from './components/Footer.tsx'
 import ProofPage from './components/ProofPage.tsx'
 import './App.css'
 
+export type AppView = 'studio' | 'refractions' | 'market'
+
 function App() {
   const { connected } = useWallet()
   const hasConnectedInApp = useRef(false)
+  const [appView, setAppView] = useState<AppView>('studio')
   const isAppPage = window.location.pathname === '/app'
   const isProofPage = window.location.pathname.startsWith('/proof/')
 
@@ -31,20 +35,42 @@ function App() {
     }
   }, [connected, isAppPage])
 
+  useEffect(() => {
+    if (!connected && appView !== 'studio') {
+      setAppView('studio')
+    }
+  }, [appView, connected])
+
+  const appViewMeta = {
+    studio: {
+      label: 'Vhey Studio',
+      title: 'Generate and store Shelby refractions.',
+    },
+    refractions: {
+      label: 'My Refractions',
+      title: 'Manage your saved Shelby refractions.',
+    },
+    market: {
+      label: 'Marketplace',
+      title: 'List and discover refraction NFTs.',
+    },
+  } satisfies Record<AppView, { label: string; title: string }>
+
   if (isAppPage) {
     return (
       <div className="app-root">
-        <Navbar page="app" />
+        <Navbar page="app" appView={appView} onAppViewChange={setAppView} />
         <UserStats />
         <main className="app-shell">
           <section className="app-intro">
             <div>
-              <div className="section-label">Vhey Studio</div>
-              <h1 className="font-display">Generate, store, and manage Shelby refractions.</h1>
+              <div className="section-label">{appViewMeta[appView].label}</div>
+              <h1 className="font-display">{appViewMeta[appView].title}</h1>
             </div>
           </section>
-          <GeneratorSection />
-          <UserDoodles />
+          {appView === 'studio' && <GeneratorSection />}
+          {appView === 'refractions' && <UserDoodles />}
+          {appView === 'market' && <MarketplaceSection />}
         </main>
         <Footer page="app" />
       </div>

@@ -1,6 +1,6 @@
 # Vhey
 
-Vhey is a creative dapp on Aptos Testnet for turning portrait uploads into refraction-style artwork, storing the result with Shelby Protocol, and keeping a simple proof trail for each saved piece.
+Vhey is a creative dapp on Shelbynet for turning portrait uploads into refraction-style artwork, storing the result with Shelby Protocol, and keeping a simple proof trail for each saved piece.
 
 The project started as a small AI doodle experiment. It is now moving toward a verifiable media flow where the generated artwork, metadata, wallet, timestamp, and content hash are tied back to decentralized storage.
 
@@ -12,19 +12,20 @@ The project started as a small AI doodle experiment. It is now moving toward a v
 
 - Separate landing page and app studio.
 - Portrait upload and doodle/refraction generation.
-- Shelby blob upload on Aptos Testnet.
+- Shelby blob upload on Shelbynet.
 - Proof metadata JSON stored alongside the artwork.
 - Proof Card with creator, timestamp, model, and SHA-256 hash.
 - Shareable proof route at `/proof/:id`.
 - My Refractions page for connected wallets.
 - Shelby blob delete action for saved refractions.
 - Optional Aptos NFT collection creation and mint flow.
+- Escrow-ready NFT marketplace contract package.
 - Shelby-inspired dark interface with hot pink, cyan, teal, and violet accents.
 
 ## How It Works
 
 1. Open the app studio at `/app`.
-2. Connect an Aptos wallet on Testnet.
+2. Connect an Aptos wallet on Shelbynet.
 3. Upload an image and generate a refraction.
 4. Save the generated artwork to Shelby.
 5. Vhey stores both the artwork blob and a metadata blob.
@@ -55,6 +56,7 @@ Set the Shelby key in `.env`:
 
 ```bash
 VITE_SHELBY_API_KEY=
+VITE_MARKETPLACE_ADDRESS=
 ```
 
 The network config is in:
@@ -64,6 +66,29 @@ src/config/network.ts
 ```
 
 For Vercel deployments, `vercel.json` includes a single-page app rewrite so direct links such as `/app` and `/proof/:id` resolve correctly.
+
+## Marketplace Contract
+
+The Move package lives in:
+
+```text
+contracts/vhey_marketplace
+```
+
+Compile and publish it with the Aptos CLI:
+
+```bash
+aptos move compile --package-dir contracts/vhey_marketplace --named-addresses vhey_marketplace=<publisher-address>
+aptos move publish --package-dir contracts/vhey_marketplace --named-addresses vhey_marketplace=<publisher-address>
+```
+
+Published Shelbynet marketplace address:
+
+```text
+0xeb9465b68be2f4ed4f69f2178e989ee2dba12300e04899b6aafa06cc30c3f5a5
+```
+
+Set `VITE_MARKETPLACE_ADDRESS` to that address. The app will then submit marketplace listings to `marketplace::list` instead of keeping them as local drafts.
 
 ## Scripts
 

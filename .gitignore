@@ -12,10 +12,28 @@ lerna-debug.log*
 .env.*
 !.env.example
 
+# Local wallet / CLI secrets
+.aptos/
+.move/
+*.pem
+*.key
+*.pkey
+*.keystore
+*.wallet
+*.priv
+*.seed
+*.mnemonic
+*mnemonic*
+*private-key*
+*private_key*
+
 node_modules
 dist
 dist-ssr
 *.local
+
+# Move build output
+contracts/**/build/
 
 # Editor directories and files
 .vscode/*

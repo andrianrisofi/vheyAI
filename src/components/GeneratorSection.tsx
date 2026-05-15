@@ -4,7 +4,13 @@ import { useSignAndSubmitTransaction } from '@aptos-labs/react';
 import type { Signer } from '@shelby-protocol/react';
 import { useUploadBlobs, useShelbyClient } from '@shelby-protocol/react';
 import { generateDoodle } from '../utils/aiService';
-import { APTOS_EXPLORER_NETWORK } from '../config/network';
+import { aptos } from '../utils/aptosClient';
+import { APTOS_EXPLORER_NETWORK, SHELBY_EXPLORER_NETWORK } from '../config/network';
+import {
+  extractMintedNftObjectAddress,
+  saveNftObjectAddress,
+  waitForOwnedNftObjectAddress,
+} from '../utils/nftObjects';
 import { getProofIdFromBlobName, saveProof } from '../utils/proof';
 import { devLogger } from '../utils/logger';
 import { SparkIcon, UploadIcon } from './Icons';
@@ -31,7 +37,7 @@ const getErrorMessage = (error: unknown) => {
 };
 
 const getShelbyExplorerUrl = (blobName: string, accountAddress: string) => {
-  return `https://explorer.shelby.xyz/testnet/blob/${encodeURI(blobName)}?account=${accountAddress}`;
+  return `https://explorer.shelby.xyz/${SHELBY_EXPLORER_NETWORK}/blob/${encodeURI(blobName)}?account=${accountAddress}`;
 };
 
 const getShortHash = (hash: string) => `${hash.slice(0, 12)}...${hash.slice(-10)}`;
@@ -325,10 +331,32 @@ const GeneratorSection = () => {
 
       setLastTxHash(transaction.hash);
       setIsMinted(true);
+
+      const executedTransaction = await aptos.waitForTransaction({
+        transactionHash: transaction.hash,
+        options: {
+          checkSuccess: true,
+        },
+      });
+      const nftObjectAddress = 'changes' in executedTransaction
+        ? extractMintedNftObjectAddress(executedTransaction.changes, savedBlobName)
+        : '';
+      const indexedNftObjectAddress = await waitForOwnedNftObjectAddress(
+        account.address.toString(),
+        savedBlobName,
+      );
+      const resolvedNftObjectAddress = indexedNftObjectAddress || nftObjectAddress;
+
+      if (resolvedNftObjectAddress) {
+        saveNftObjectAddress(savedBlobName, resolvedNftObjectAddress);
+      }
+
       showNotice({
         tone: 'success',
         title: 'NFT minted',
-        message: 'Your Aptos NFT transaction was submitted successfully.',
+        message: resolvedNftObjectAddress
+          ? 'NFT minted and object address saved for marketplace listing.'
+          : 'NFT minted. The ownership indexer is still catching up; try opening Market again in a moment.',
       });
     } catch (err) {
       devLogger.error('Mint error:', err);

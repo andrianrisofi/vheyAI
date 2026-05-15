@@ -38,7 +38,7 @@ const UserStats = () => {
       <div className="stat-divider" />
       <div className="stat-pill">
         <span className="stat-icon"><CheckIcon className="icon" /></span>
-        <span className="stat-value">Testnet Verified</span>
+        <span className="stat-value">Shelbynet Verified</span>
       </div>
 
       <style>{`
