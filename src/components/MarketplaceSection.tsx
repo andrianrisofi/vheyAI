@@ -4,6 +4,7 @@ import { useSignAndSubmitTransaction } from '@aptos-labs/react';
 import { useAccountBlobs, useShelbyClient } from '@shelby-protocol/react';
 import type { BlobMetadata, ShelbyClient } from '@shelby-protocol/sdk/browser';
 import {
+  LEGACY_MARKETPLACE_MODULE,
   MARKETPLACE_MODULE,
   getMarketplaceFunction,
   isMarketplaceConfigured,
@@ -26,6 +27,7 @@ type MarketListing = {
   price: string;
   tokenObjectAddress?: string;
   listingObjectAddress?: string;
+  marketplaceModule?: string;
   txHash?: string;
   createdAt: string;
 };
@@ -121,23 +123,15 @@ type MarketplaceEvent = {
   type?: string;
   data?: {
     listing?: string;
-    seller?: string;
-    token?: string;
-    price_octas?: string;
-    blob_name?: string;
-    image_uri?: string;
   };
-  transaction_version?: number;
 };
 
-type MarketplaceEventsResponse = {
-  events: MarketplaceEvent[];
-};
+type ListingView = [string, string, string, string, string, boolean];
 
 const extractListingObjectAddress = (events: unknown[]) => {
   const listedEvent = events.find((event): event is MarketplaceEvent => {
     const typedEvent = event as MarketplaceEvent;
-    return Boolean(typedEvent.type?.endsWith('::marketplace_v2::Listed'))
+    return Boolean(typedEvent.type?.endsWith('::Listed'))
       && typeof typedEvent.data?.listing === 'string';
   });
 
@@ -159,61 +153,40 @@ const getListingObjectAddressFromTx = async (txHash: string) => {
 const fetchPublicListings = async (): Promise<MarketListing[]> => {
   if (!MARKETPLACE_MODULE) return [];
 
-  const response = await aptos.queryIndexer<MarketplaceEventsResponse>({
-    query: {
-      query: `
-        query MarketplaceEvents($types: [String!]) {
-          events(
-            where: { type: { _in: $types } }
-            order_by: { transaction_version: desc }
-            limit: 200
-          ) {
-            type
-            data
-            transaction_version
-          }
-        }
-      `,
-      variables: {
-        types: [
-          `${MARKETPLACE_MODULE}::Listed`,
-          `${MARKETPLACE_MODULE}::Purchased`,
-          `${MARKETPLACE_MODULE}::Delisted`,
-        ],
-      },
+  const [listingAddresses] = await aptos.view<[string[]]>({
+    payload: {
+      function: `${MARKETPLACE_MODULE}::get_active_listings` as `${string}::${string}::${string}`,
+      functionArguments: [],
     },
   });
 
-  const inactiveListings = new Set(
-    response.events
-      .filter((event) => (
-        event.type?.endsWith('::Purchased')
-        || event.type?.endsWith('::Delisted')
-      ))
-      .map((event) => event.data?.listing)
-      .filter((listing): listing is string => Boolean(listing)),
-  );
+  const listings = await Promise.all(listingAddresses.map(async (listingObjectAddress): Promise<MarketListing | null> => {
+    try {
+      const [seller, token, priceOctas, blobName, , sold] = await aptos.view<ListingView>({
+        payload: {
+          function: `${MARKETPLACE_MODULE}::get_listing` as `${string}::${string}::${string}`,
+          functionArguments: [listingObjectAddress],
+        },
+      });
 
-  return response.events
-    .filter((event) => event.type?.endsWith('::Listed'))
-    .map((event): MarketListing | null => {
-      const listingObjectAddress = event.data?.listing;
-      const owner = event.data?.seller;
-      const blobName = event.data?.blob_name;
-
-      if (!listingObjectAddress || !owner || !blobName || inactiveListings.has(listingObjectAddress)) return null;
-
+      if (sold) return null;
       return {
         id: listingObjectAddress,
         blobName,
-        owner,
-        price: fromOctas(event.data?.price_octas ?? 0),
-        tokenObjectAddress: event.data?.token,
+        owner: seller,
+        price: fromOctas(priceOctas),
+        tokenObjectAddress: token,
         listingObjectAddress,
-        createdAt: event.transaction_version?.toString() ?? '',
+        marketplaceModule: MARKETPLACE_MODULE,
+        createdAt: '',
       };
-    })
-    .filter((listing): listing is MarketListing => Boolean(listing));
+    } catch (error) {
+      devLogger.error('Marketplace listing view error:', error);
+      return null;
+    }
+  }));
+
+  return listings.filter((listing): listing is MarketListing => Boolean(listing));
 };
 
 const mergeListings = (chainListings: MarketListing[], cachedListings: MarketListing[]) => {
@@ -533,6 +506,7 @@ const MarketplaceSection = () => {
         price: normalizedPrice.toString(),
         tokenObjectAddress: listingTokenObjectAddress || undefined,
         listingObjectAddress,
+        marketplaceModule: MARKETPLACE_MODULE,
         txHash,
         createdAt: new Date().toISOString(),
       },
@@ -553,10 +527,12 @@ const MarketplaceSection = () => {
 
   const handleDelist = async (listing: MarketListing) => {
     if (isMarketplaceConfigured && listing.listingObjectAddress) {
+      const listingModule = listing.marketplaceModule ?? LEGACY_MARKETPLACE_MODULE;
+
       try {
         const transaction = await signAndSubmitTransactionAsync({
           data: {
-            function: getMarketplaceFunction('delist') as `${string}::${string}::${string}`,
+            function: getMarketplaceFunction('delist', listingModule) as `${string}::${string}::${string}`,
             functionArguments: [listing.listingObjectAddress],
           },
         });
@@ -584,7 +560,7 @@ const MarketplaceSection = () => {
     try {
       const transaction = await signAndSubmitTransactionAsync({
         data: {
-          function: getMarketplaceFunction('buy') as `${string}::${string}::${string}`,
+          function: getMarketplaceFunction('buy', listing.marketplaceModule) as `${string}::${string}::${string}`,
           functionArguments: [listing.listingObjectAddress],
         },
       });

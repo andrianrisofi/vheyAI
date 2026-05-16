@@ -1,6 +1,10 @@
 export const MARKETPLACE_ADDRESS = import.meta.env.VITE_MARKETPLACE_ADDRESS as string | undefined;
 
 export const MARKETPLACE_MODULE = MARKETPLACE_ADDRESS
+  ? `${MARKETPLACE_ADDRESS}::marketplace_v3`
+  : '';
+
+export const LEGACY_MARKETPLACE_MODULE = MARKETPLACE_ADDRESS
   ? `${MARKETPLACE_ADDRESS}::marketplace_v2`
   : '';
 
@@ -13,7 +17,7 @@ export const toOctas = (aptAmount: string) => {
   return (whole + fractional).toString();
 };
 
-export const getMarketplaceFunction = (name: 'list' | 'buy' | 'delist') => {
-  if (!MARKETPLACE_MODULE) return '';
-  return `${MARKETPLACE_MODULE}::${name}`;
+export const getMarketplaceFunction = (name: 'list' | 'buy' | 'delist', moduleName = MARKETPLACE_MODULE) => {
+  if (!moduleName) return '';
+  return `${moduleName}::${name}`;
 };
