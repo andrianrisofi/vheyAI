@@ -62,12 +62,14 @@ function App() {
         <Navbar page="app" appView={appView} onAppViewChange={setAppView} />
         <UserStats />
         <main className="app-shell">
-          <section className="app-intro">
-            <div>
-              <div className="section-label">{appViewMeta[appView].label}</div>
-              <h1 className="font-display">{appViewMeta[appView].title}</h1>
-            </div>
-          </section>
+          {appView !== 'market' && (
+            <section className="app-intro">
+              <div>
+                <div className="section-label">{appViewMeta[appView].label}</div>
+                <h1 className="font-display">{appViewMeta[appView].title}</h1>
+              </div>
+            </section>
+          )}
           {appView === 'studio' && <GeneratorSection />}
           {appView === 'refractions' && <UserDoodles />}
           {appView === 'market' && <MarketplaceSection />}

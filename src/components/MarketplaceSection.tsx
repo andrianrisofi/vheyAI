@@ -581,9 +581,6 @@ const MarketplaceSection = () => {
             <div className="section-label">Marketplace</div>
             <h2 className="font-display market-title">List and discover refraction NFTs</h2>
           </div>
-          <p>
-            Escrow-ready marketplace for Vhey refractions. List minted artwork, delist it anytime, or prepare it for buying from another wallet.
-          </p>
         </div>
 
         <div className="market-tabs" role="tablist" aria-label="Marketplace views">
@@ -682,7 +679,16 @@ const MarketplaceSection = () => {
           </div>
           )}
 
-          <div className="market-items">
+          <div className="market-board">
+            {marketView === 'mine' && (
+              <div className="market-board-head">
+                <div>
+                  <span>Listed NFTs</span>
+                  <strong>{myListings.length} active</strong>
+                </div>
+              </div>
+            )}
+            <div className="market-items">
             {isLoadingMarket ? (
               <div className="market-empty glass-card">
                 <h3>Loading listings</h3>
@@ -754,33 +760,26 @@ const MarketplaceSection = () => {
                 </p>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
 
       <style>{`
         .market-section {
-          padding: 48px 20px 88px;
-          border-top: 1px solid var(--border);
+          padding: 28px 38px 88px;
+          border-top: 0;
         }
         .market-container {
-          max-width: 1040px;
-          margin: 0 auto;
+          width: 100%;
+          max-width: none;
+          margin: 0;
+          padding: 0;
         }
         .market-heading {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 24px;
-          margin-bottom: 24px;
-          padding: 18px 0 8px;
-        }
-        .market-heading p {
-          max-width: 390px;
-          color: var(--text-muted);
-          line-height: 1.55;
-          font-weight: 700;
-          font-size: 14px;
+          display: block;
+          margin-bottom: 22px;
+          padding: 4px 0 8px;
         }
         .market-tabs {
           display: inline-flex;
@@ -828,20 +827,46 @@ const MarketplaceSection = () => {
         }
         .market-layout {
           display: grid;
-          grid-template-columns: 318px minmax(0, 1fr);
-          gap: 18px;
+          grid-template-columns: 300px minmax(0, 1fr);
+          gap: 20px;
           align-items: start;
         }
         .market-layout-explore {
           grid-template-columns: 1fr;
         }
         .market-layout-explore .market-items {
-          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          grid-template-columns: repeat(auto-fill, minmax(190px, 220px));
+          justify-content: start;
+        }
+        .market-board {
+          min-width: 0;
+          width: 100%;
+        }
+        .market-board-head {
+          min-height: 44px;
+          margin-bottom: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 2px;
+        }
+        .market-board-head span {
+          display: block;
+          color: var(--text-muted);
+          font-size: 11px;
+          font-weight: 900;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          margin-bottom: 4px;
+        }
+        .market-board-head strong {
+          color: var(--text);
+          font-size: 15px;
         }
         .market-listing-panel {
-          padding: 18px;
+          padding: 16px;
           display: grid;
-          gap: 14px;
+          gap: 12px;
           position: sticky;
           top: 98px;
           background:
@@ -853,11 +878,11 @@ const MarketplaceSection = () => {
           display: flex;
           justify-content: space-between;
           gap: 14px;
-          padding-bottom: 12px;
+          padding-bottom: 10px;
           border-bottom: 1px solid rgba(255, 137, 202, 0.16);
         }
         .market-listing-panel h3 {
-          font-size: 20px;
+          font-size: 19px;
         }
         .market-panel-head p {
           margin-top: 4px;
@@ -879,7 +904,7 @@ const MarketplaceSection = () => {
         }
         .market-listing-panel label {
           display: grid;
-          gap: 8px;
+          gap: 7px;
           color: var(--text-muted);
           font-size: 12px;
           font-weight: 900;
@@ -893,7 +918,7 @@ const MarketplaceSection = () => {
           border-radius: var(--radius-sm);
           background: rgba(255, 255, 255, 0.06);
           color: var(--text);
-          padding: 11px 12px;
+          padding: 10px 11px;
           font: inherit;
           font-weight: 700;
           outline: none;
@@ -945,12 +970,15 @@ const MarketplaceSection = () => {
         }
         .market-items {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(238px, 1fr));
-          gap: 18px;
+          grid-template-columns: repeat(auto-fill, minmax(190px, 220px));
+          justify-content: start;
+          gap: 14px;
+          align-items: start;
         }
         .market-card {
-          padding: 12px;
+          padding: 10px;
           min-width: 0;
+          width: 100%;
           background:
             linear-gradient(160deg, rgba(255, 47, 146, 0.07), rgba(83, 240, 255, 0.035)),
             rgba(17, 19, 29, 0.86);
@@ -972,12 +1000,12 @@ const MarketplaceSection = () => {
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-bottom: 12px;
+          margin-bottom: 10px;
           border: 1px solid rgba(255, 255, 255, 0.04);
         }
         .market-img-wrapper img {
-          width: 88%;
-          height: 88%;
+          width: 84%;
+          height: 84%;
           object-fit: contain;
           filter: drop-shadow(0 18px 18px rgba(0, 0, 0, 0.28));
         }
@@ -1018,10 +1046,10 @@ const MarketplaceSection = () => {
           letter-spacing: 0.08em;
         }
         .market-card-body {
-          margin-bottom: 12px;
+          margin-bottom: 10px;
         }
         .market-card-body h3 {
-          font-size: 15px;
+          font-size: 14px;
           max-width: 100%;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -1045,7 +1073,7 @@ const MarketplaceSection = () => {
         }
         .market-actions {
           border-top: 1px solid var(--border);
-          padding-top: 10px;
+          padding-top: 9px;
           display: grid;
           grid-template-columns: 1fr;
           gap: 8px;
@@ -1054,7 +1082,7 @@ const MarketplaceSection = () => {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          min-height: 32px;
+          min-height: 30px;
           border-radius: var(--radius-sm);
           color: var(--cyan);
           background: rgba(83, 240, 255, 0.06);
@@ -1067,8 +1095,8 @@ const MarketplaceSection = () => {
           width: 100%;
           border: 1px solid var(--border);
           border-radius: var(--radius-sm);
-          min-height: 34px;
-          padding: 9px 10px;
+          min-height: 32px;
+          padding: 8px 10px;
           background: rgba(255, 255, 255, 0.04);
           color: var(--text);
           font-size: 12px;
@@ -1083,6 +1111,7 @@ const MarketplaceSection = () => {
         .market-empty {
           padding: 32px;
           min-height: 220px;
+          width: min(100%, 360px);
           display: flex;
           flex-direction: column;
           justify-content: center;
@@ -1096,12 +1125,23 @@ const MarketplaceSection = () => {
         }
 
         @media (max-width: 860px) {
+          .market-container {
+            padding-left: 0;
+          }
+          .market-section {
+            padding-left: 20px;
+            padding-right: 20px;
+          }
           .market-heading {
             display: grid;
             padding-top: 0;
           }
           .market-layout {
             grid-template-columns: 1fr;
+          }
+          .market-items,
+          .market-layout-explore .market-items {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
           }
           .market-listing-panel {
             position: static;
