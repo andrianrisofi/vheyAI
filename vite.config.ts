@@ -4,6 +4,9 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills'
 
 // https://vite.dev/config/
 export default defineConfig({
+  esbuild: {
+    drop: ['console', 'debugger'],
+  },
   assetsInclude: ['**/*.wasm'],
   optimizeDeps: {
     exclude: ['@shelby-protocol/clay-codes'],

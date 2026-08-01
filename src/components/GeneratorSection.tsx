@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useSignAndSubmitTransaction } from '@aptos-labs/react';
 import type { Signer } from '@shelby-protocol/react';
@@ -40,6 +40,14 @@ const getShelbyExplorerUrl = (blobName: string, accountAddress: string) => {
   return `https://explorer.shelby.xyz/${SHELBY_EXPLORER_NETWORK}/blob/${encodeURI(blobName)}?account=${accountAddress}`;
 };
 
+const getShelbyBlobUrl = (blobName: string, accountAddress: string) => {
+  const apiHost = SHELBY_EXPLORER_NETWORK === 'testnet'
+    ? 'https://api.testnet.shelby.xyz'
+    : 'https://api.shelbynet.shelby.xyz';
+
+  return `${apiHost}/shelby/v1/blobs/${accountAddress}/${encodeURI(blobName)}`;
+};
+
 const getShortHash = (hash: string) => `${hash.slice(0, 12)}...${hash.slice(-10)}`;
 
 const getSha256Hash = async (data: ArrayBuffer) => {
@@ -66,9 +74,71 @@ const getImageMimeType = (contentType: string, extension: string) => {
   return 'image/jpeg';
 };
 
+const getNftMetadata = (proofMetadata: ProofCard, imageUri: string, proofUri: string, mimeType: string) => {
+  const fileName = proofMetadata.imageBlobName.split('/').pop() ?? proofMetadata.imageBlobName;
+  const createdDate = new Date(proofMetadata.createdAt);
+
+  return {
+    name: `Refraction #${proofMetadata.id}`,
+    description: 'A portrait refraction generated with Vhey, stored on Shelby Protocol, and minted as an Aptos digital collectible.',
+    image: imageUri,
+    animation_url: imageUri,
+    external_url: proofUri,
+    background_color: '07090f',
+    attributes: [
+      { trait_type: 'Collection', value: NFT_COLLECTION_NAME },
+      { trait_type: 'Network', value: APTOS_EXPLORER_NETWORK },
+      { trait_type: 'Storage', value: 'Shelby Protocol' },
+      { trait_type: 'Artwork Type', value: 'Portrait Refraction' },
+      { trait_type: 'Generator', value: 'Vhey Studio' },
+      { trait_type: 'Model', value: proofMetadata.model },
+      { trait_type: 'Prompt', value: proofMetadata.prompt || 'Untitled refraction' },
+      { trait_type: 'File Name', value: fileName },
+      { trait_type: 'Content Hash', value: proofMetadata.contentHash },
+      { trait_type: 'Created Date', value: createdDate.toISOString().slice(0, 10) },
+    ],
+    properties: {
+      category: 'image',
+      collection: NFT_COLLECTION_NAME,
+      creator: proofMetadata.creator,
+      created_at: proofMetadata.createdAt,
+      content_hash: proofMetadata.contentHash,
+      model: proofMetadata.model,
+      prompt: proofMetadata.prompt,
+      network: APTOS_EXPLORER_NETWORK,
+      storage: {
+        protocol: 'Shelby Protocol',
+        image_blob: proofMetadata.imageBlobName,
+        metadata_blob: proofMetadata.metadataBlobName,
+        image_uri: imageUri,
+        proof_uri: proofUri,
+      },
+      files: [
+        {
+          uri: imageUri,
+          type: mimeType,
+          cdn: false,
+        },
+        {
+          uri: proofUri,
+          type: 'application/json',
+          cdn: false,
+        },
+      ],
+    },
+    vhey: {
+      schema: 'vhey.nft.v2',
+      proof_schema: 'vhey.proof.v1',
+      proof_id: proofMetadata.id,
+      ...proofMetadata,
+    },
+  };
+};
+
 const NFT_COLLECTION_NAME = 'Vhey AI Refractions';
 const NFT_COLLECTION_DESCRIPTION = 'AI doodle refractions stored with Shelby Protocol.';
 const NFT_COLLECTION_URI = 'https://vhey.ai/refractions';
+const BLOB_RENEWAL_WINDOW_MS = 48 * 60 * 60 * 1000;
 const MAX_U64 = '18446744073709551615';
 
 const GeneratorSection = () => {
@@ -106,11 +176,16 @@ const GeneratorSection = () => {
   const [notice, setNotice] = useState<Notice | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const walletAddress = account?.address?.toString() ?? '';
-  const collectionStorageKey = walletAddress ? `vhey-collection-ready-${walletAddress}` : '';
+  const collectionStorageKey = walletAddress ? `vhey-collection-ready-${APTOS_EXPLORER_NETWORK}-${walletAddress}` : '';
   const isCollectionReady = Boolean(
     collectionStorageKey
     && (createdCollectionKey === collectionStorageKey || localStorage.getItem(collectionStorageKey) === 'true'),
   );
+
+  useEffect(() => {
+    if (!walletAddress) return;
+    localStorage.removeItem(`vhey-collection-ready-${walletAddress}`);
+  }, [walletAddress]);
 
   const showNotice = (nextNotice: Notice) => {
     setNotice(nextNotice);
@@ -236,11 +311,14 @@ const GeneratorSection = () => {
         model: 'dicebear/adventurer-refraction',
         createdAt,
       };
-      const metadataBlobData = new TextEncoder().encode(JSON.stringify({
-        schema: 'vhey.proof.v1',
-        ...proofMetadata,
-      }, null, 2));
-      const expirationMicros = (Date.now() + 30 * 24 * 60 * 60 * 1000) * 1000;
+      const imageUri = getShelbyBlobUrl(blobName, account.address.toString());
+      const proofUri = getShelbyBlobUrl(metadataBlobName, account.address.toString());
+      const metadataBlobData = new TextEncoder().encode(JSON.stringify(
+        getNftMetadata(proofMetadata, imageUri, proofUri, mimeType),
+        null,
+        2,
+      ));
+      const expirationMicros = (Date.now() + BLOB_RENEWAL_WINDOW_MS) * 1000;
       const signer: Signer = {
         account: account.address.toString(),
         signAndSubmitTransaction: walletAdapter.signAndSubmitTransaction,
@@ -312,7 +390,8 @@ const GeneratorSection = () => {
     }
 
     try {
-      const shelbyUri = getShelbyExplorerUrl(savedBlobName, account.address.toString());
+      const metadataBlobName = savedBlobName.replace(/\.[^.]+$/, '.metadata.json');
+      const tokenUri = getShelbyBlobUrl(metadataBlobName, account.address.toString());
 
       const transaction = await signAndSubmitTransactionAsync({
         data: {
@@ -321,7 +400,7 @@ const GeneratorSection = () => {
             NFT_COLLECTION_NAME,
             'A unique doodle refraction by Vhey AI',
             savedBlobName,
-            shelbyUri,
+            tokenUri,
             [],
             [],
             [],

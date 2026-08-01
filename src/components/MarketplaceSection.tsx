@@ -10,7 +10,7 @@ import {
   isMarketplaceConfigured,
   toOctas,
 } from '../config/marketplace';
-import { SHELBY_EXPLORER_NETWORK } from '../config/network';
+import { APTOS_EXPLORER_NETWORK, SHELBY_EXPLORER_NETWORK } from '../config/network';
 import { aptos } from '../utils/aptosClient';
 import {
   findOwnedNftObjectAddress,
@@ -38,7 +38,8 @@ type PreviewProps = {
   client: ShelbyClient;
 };
 
-const MARKET_STORAGE_KEY = 'vhey-market-listings';
+const MARKET_STORAGE_KEY = `vhey-market-listings-${APTOS_EXPLORER_NETWORK}`;
+const LEGACY_MARKET_STORAGE_KEY = 'vhey-market-listings';
 
 const getShelbyExplorerUrl = (blobName: string, accountAddress: string) => {
   return `https://explorer.shelby.xyz/${SHELBY_EXPLORER_NETWORK}/blob/${encodeURI(blobName)}?account=${accountAddress}`;
@@ -270,6 +271,10 @@ const MarketplaceSection = () => {
   const [resolvedNftObjectAddress, setResolvedNftObjectAddress] = useState('');
   const [marketView, setMarketView] = useState<'explore' | 'mine'>('explore');
 
+  useEffect(() => {
+    localStorage.removeItem(LEGACY_MARKET_STORAGE_KEY);
+  }, []);
+
   const { data: blobs, isLoading } = useAccountBlobs({
     client: shelbyClient,
     account: walletAddress,
@@ -293,9 +298,11 @@ const MarketplaceSection = () => {
   const selectedBlobHasNftObject = Boolean(resolvedNftObjectAddress);
   const canSubmitListing = !isSubmittingMarketTx
     && !isCheckingNftObject
+    && isMarketplaceConfigured
     && Boolean(selectedBlob)
     && Number(price) > 0
-    && (!isMarketplaceConfigured || (selectedBlobHasNftObject && isNftObjectValid));
+    && selectedBlobHasNftObject
+    && isNftObjectValid;
 
   useEffect(() => {
     let isMounted = true;
@@ -451,51 +458,54 @@ const MarketplaceSection = () => {
       return;
     }
 
+    if (!isMarketplaceConfigured) {
+      setStatusMessage('Testnet marketplace contract is not configured yet. Publish the contract on testnet, then set VITE_MARKETPLACE_ADDRESS.');
+      return;
+    }
+
     let txHash: string | undefined;
     let listingTokenObjectAddress = resolvedNftObjectAddress || tokenObjectAddress.trim();
     let listingObjectAddress: string | undefined;
 
-    if (isMarketplaceConfigured) {
-      let resolvedTokenObjectAddress = resolvedNftObjectAddress;
+    let resolvedTokenObjectAddress = resolvedNftObjectAddress;
 
-      if (!resolvedTokenObjectAddress) {
-        setStatusMessage('Resolving NFT object from your wallet...');
-        resolvedTokenObjectAddress = await findOwnedNftObjectAddress(walletAddress, selectedBlob);
-      }
+    if (!resolvedTokenObjectAddress) {
+      setStatusMessage('Resolving NFT object from your wallet...');
+      resolvedTokenObjectAddress = await findOwnedNftObjectAddress(walletAddress, selectedBlob);
+    }
 
-      if (!resolvedTokenObjectAddress || !isAddressLike(resolvedTokenObjectAddress)) {
-        removeNftObjectAddress(selectedBlob);
-        setTokenObjectAddress('');
-        setIsNftObjectValid(false);
-        setStatusMessage('No minted NFT found for this Shelby refraction. Mint it from Studio first.');
-        return;
-      }
+    if (!resolvedTokenObjectAddress || !isAddressLike(resolvedTokenObjectAddress)) {
+      removeNftObjectAddress(selectedBlob);
+      setTokenObjectAddress('');
+      setIsNftObjectValid(false);
+      setStatusMessage('No minted NFT found for this Shelby refraction. Mint it from Studio first.');
+      return;
+    }
 
-      saveNftObjectAddress(selectedBlob, resolvedTokenObjectAddress);
-      setTokenObjectAddress(resolvedTokenObjectAddress);
-      setResolvedNftObjectAddress(resolvedTokenObjectAddress);
-      setIsNftObjectValid(true);
-      listingTokenObjectAddress = resolvedTokenObjectAddress;
+    saveNftObjectAddress(selectedBlob, resolvedTokenObjectAddress);
+    setTokenObjectAddress(resolvedTokenObjectAddress);
+    setResolvedNftObjectAddress(resolvedTokenObjectAddress);
+    setIsNftObjectValid(true);
+    listingTokenObjectAddress = resolvedTokenObjectAddress;
 
-      try {
-        const transaction = await signAndSubmitTransactionAsync({
-          data: {
-            function: getMarketplaceFunction('list') as `${string}::${string}::${string}`,
-            functionArguments: [
-              resolvedTokenObjectAddress,
-              toOctas(price),
-              selectedBlob,
-              getShelbyExplorerUrl(selectedBlob, walletAddress),
-            ],
-          },
-        });
-        txHash = transaction.hash;
-        listingObjectAddress = await getListingObjectAddressFromTx(transaction.hash);
-      } catch (error) {
-        devLogger.error('Marketplace list error:', error);
-        setStatusMessage(getErrorMessage(error));
-        return;
-      }
+    try {
+      const transaction = await signAndSubmitTransactionAsync({
+        data: {
+          function: getMarketplaceFunction('list') as `${string}::${string}::${string}`,
+          functionArguments: [
+            resolvedTokenObjectAddress,
+            toOctas(price),
+            selectedBlob,
+            getShelbyExplorerUrl(selectedBlob, walletAddress),
+          ],
+        },
+      });
+      txHash = transaction.hash;
+      listingObjectAddress = await getListingObjectAddressFromTx(transaction.hash);
+    } catch (error) {
+      devLogger.error('Marketplace list error:', error);
+      setStatusMessage(getErrorMessage(error));
+      return;
     }
 
     const nextListings = [
@@ -519,9 +529,7 @@ const MarketplaceSection = () => {
     setTokenObjectAddress('');
     setPrice('');
     setStatusMessage(
-      txHash
-        ? `On-chain listing created. Tx: ${txHash.slice(0, 10)}...`
-        : 'Draft listing saved locally. Set VITE_MARKETPLACE_ADDRESS to enable on-chain escrow.',
+      `On-chain listing created. Tx: ${txHash.slice(0, 10)}...`,
     );
   };
 
@@ -657,7 +665,7 @@ const MarketplaceSection = () => {
                   ? 'Mint NFT First'
                   : isMarketplaceConfigured && selectedBlob && !isNftObjectValid
                     ? 'Invalid NFT Object'
-                  : isMarketplaceConfigured ? 'List On-Chain' : 'Save Draft Listing'}
+                  : isMarketplaceConfigured ? 'List On-Chain' : 'Contract Not Set'}
             </button>
             {isMarketplaceConfigured && selectedBlob && !selectedBlobHasNftObject && (
               <p className="market-warning">
@@ -672,7 +680,7 @@ const MarketplaceSection = () => {
             <p className="market-note">
               {isMarketplaceConfigured
                 ? 'On-chain listing escrows the NFT object in the marketplace contract.'
-                : 'Marketplace contract address is not set yet. Listings stay local until VITE_MARKETPLACE_ADDRESS is configured.'}
+                : 'Testnet marketplace contract is not set yet. Local draft listing is disabled.'}
             </p>
             {isLoading && <p className="market-note">Loading your Shelby blobs...</p>}
             {statusMessage && <p className="market-status">{statusMessage}</p>}
@@ -692,7 +700,7 @@ const MarketplaceSection = () => {
             {isLoadingMarket ? (
               <div className="market-empty glass-card">
                 <h3>Loading listings</h3>
-                <p>Reading marketplace events from Shelbynet.</p>
+                <p>Reading marketplace listings from testnet.</p>
               </div>
             ) : visibleListings.length > 0 ? (
               visibleListings.map((listing) => {
