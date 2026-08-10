@@ -5,6 +5,7 @@ import { AptosWalletAdapterProvider } from '@aptos-labs/wallet-adapter-react'
 import { ShelbyClientProvider } from '@shelby-protocol/react'
 import { ShelbyClient } from '@shelby-protocol/sdk/browser'
 import AptosCoreProvider from './providers/AptosCoreProvider.tsx'
+import ErrorBoundary from './components/ErrorBoundary.tsx'
 import { APTOS_NETWORK, shelbyClientConfig } from './config/network.ts'
 import './index.css'
 import App from './App.tsx'
@@ -22,17 +23,19 @@ const shelbyClient = new ShelbyClient(shelbyClientConfig)
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AptosWalletAdapterProvider
-        autoConnect={true}
-        dappConfig={{ network: APTOS_NETWORK }}
-      >
-        <AptosCoreProvider>
-          <ShelbyClientProvider client={shelbyClient}>
-            <App />
-          </ShelbyClientProvider>
-        </AptosCoreProvider>
-      </AptosWalletAdapterProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <AptosWalletAdapterProvider
+          autoConnect={true}
+          dappConfig={{ network: APTOS_NETWORK }}
+        >
+          <AptosCoreProvider>
+            <ShelbyClientProvider client={shelbyClient}>
+              <App />
+            </ShelbyClientProvider>
+          </AptosCoreProvider>
+        </AptosWalletAdapterProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

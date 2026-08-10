@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useSignAndSubmitTransaction } from '@aptos-labs/react';
-import { useAccountBlobs, useDeleteBlobs, useShelbyClient } from '@shelby-protocol/react';
-import type { BlobMetadata, ShelbyClient } from '@shelby-protocol/sdk/browser';
+import { useAccountBlobs, useDeleteObjects, useShelbyClient } from '@shelby-protocol/react';
+import type { FullObjectMetadata, ShelbyClient } from '@shelby-protocol/sdk/browser';
 import { SHELBY_EXPLORER_NETWORK } from '../config/network';
 import { devLogger } from '../utils/logger';
 
@@ -218,9 +218,9 @@ const UserDoodles = () => {
     account: walletAddress,
     enabled: connected && !!walletAddress,
   });
-  const deleteBlobs = useDeleteBlobs({
+  const deleteBlobs = useDeleteObjects({
     client: shelbyClient,
-    onError: (error) => {
+    onError: (error: Error) => {
       devLogger.error('Delete blob error:', error);
       setStatusMessage(error.message);
       setPendingDeleteBlob(null);
@@ -299,7 +299,7 @@ const UserDoodles = () => {
     setStatusMessage('Confirm delete on the selected card. Shelby deletes are permanent.');
   };
 
-  const handleRenewBlobs = async (targetBlobs: BlobMetadata[]) => {
+  const handleRenewBlobs = async (targetBlobs: FullObjectMetadata[]) => {
     if (!connected || !account?.address) {
       setStatusMessage('Connect your Aptos wallet before renewing Shelby storage.');
       return;
@@ -347,7 +347,7 @@ const UserDoodles = () => {
     }
   };
 
-  const handleRenewBlob = async (blob: BlobMetadata) => {
+  const handleRenewBlob = async (blob: FullObjectMetadata) => {
     await handleRenewBlobs([blob]);
   };
 
@@ -443,7 +443,7 @@ const UserDoodles = () => {
               <span className="keeper-kicker">Blob Keeper</span>
               <h3>Renew selected refractions before they expire.</h3>
               <p>
-                Shelby testnet allows up to 48 hours per renewal call. Selected blobs are renewed one transaction at a time.
+                Shelby shelbynet allows up to 48 hours per renewal call. Selected blobs are renewed one transaction at a time.
               </p>
             </div>
             <div className="keeper-stats">
@@ -551,7 +551,7 @@ const UserDoodles = () => {
           </div>
 
           <div className="doodles-grid">
-            {visibleBlobs.map((blob: BlobMetadata) => {
+            {visibleBlobs.map((blob: FullObjectMetadata) => {
               const blobName = blob.blobNameSuffix;
               const isConfirmingDelete = pendingDeleteBlob === blobName;
               const isDeleting = deleteBlobs.isPending && isConfirmingDelete;

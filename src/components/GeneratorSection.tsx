@@ -5,7 +5,7 @@ import type { Signer } from '@shelby-protocol/react';
 import { useUploadBlobs, useShelbyClient } from '@shelby-protocol/react';
 import { generateDoodle } from '../utils/aiService';
 import { aptos } from '../utils/aptosClient';
-import { APTOS_EXPLORER_NETWORK, SHELBY_EXPLORER_NETWORK } from '../config/network';
+import { APTOS_EXPLORER_NETWORK, SHELBY_LOCATION_HINT } from '../config/network';
 import {
   extractMintedNftObjectAddress,
   saveNftObjectAddress,
@@ -37,14 +37,11 @@ const getErrorMessage = (error: unknown) => {
 };
 
 const getShelbyExplorerUrl = (blobName: string, accountAddress: string) => {
-  return `https://explorer.shelby.xyz/${SHELBY_EXPLORER_NETWORK}/blob/${encodeURI(blobName)}?account=${accountAddress}`;
+  return `https://explorer.shelby.xyz/shelbynet/blob/${encodeURI(blobName)}?account=${accountAddress}`;
 };
 
 const getShelbyBlobUrl = (blobName: string, accountAddress: string) => {
-  const apiHost = SHELBY_EXPLORER_NETWORK === 'testnet'
-    ? 'https://api.testnet.shelby.xyz'
-    : 'https://api.shelbynet.shelby.xyz';
-
+  const apiHost = 'https://api.shelbynet.shelby.xyz';
   return `${apiHost}/shelby/v1/blobs/${accountAddress}/${encodeURI(blobName)}`;
 };
 
@@ -145,6 +142,7 @@ const GeneratorSection = () => {
   const walletAdapter = useWallet();
   const { connected, account } = walletAdapter;
   const shelbyClient = useShelbyClient();
+
   const {
     signAndSubmitTransactionAsync,
     isPending: isSubmittingMint,
@@ -152,7 +150,7 @@ const GeneratorSection = () => {
 
   const uploadBlobsMutation = useUploadBlobs({
     client: shelbyClient,
-    onError: (err) => {
+    onError: (err: Error) => {
       devLogger.error('Upload error:', err);
       showNotice({
         tone: 'error',
@@ -186,6 +184,9 @@ const GeneratorSection = () => {
     if (!walletAddress) return;
     localStorage.removeItem(`vhey-collection-ready-${walletAddress}`);
   }, [walletAddress]);
+
+  const isUploading = uploadBlobsMutation.isPending;
+  const isMinting = isSubmittingMint;
 
   const showNotice = (nextNotice: Notice) => {
     setNotice(nextNotice);
@@ -319,10 +320,23 @@ const GeneratorSection = () => {
         2,
       ));
       const expirationMicros = (Date.now() + BLOB_RENEWAL_WINDOW_MS) * 1000;
+      
+      // Create signer object for Shelby Protocol
       const signer: Signer = {
-        account: account.address.toString(),
+        account: account?.address?.toString() ?? '',
         signAndSubmitTransaction: walletAdapter.signAndSubmitTransaction,
       };
+
+      // Attempt to initialize the Shelby account if needed (sets default location preference)
+      try {
+        if (shelbyClient && 'initializeAccount' in shelbyClient) {
+          devLogger.info('Initializing Shelby account...');
+          await (shelbyClient as any).initializeAccount({ signer });
+        }
+      } catch (initErr) {
+        // Account might already be initialized, continue with upload
+        devLogger.info('Account initialization note: ' + (initErr instanceof Error ? initErr.message : 'Already initialized'));
+      }
 
       uploadBlobsMutation.mutate(
         {
@@ -332,6 +346,10 @@ const GeneratorSection = () => {
             { blobName: metadataBlobName, blobData: metadataBlobData },
           ],
           expirationMicros,
+          options: {
+            selectedLocation: SHELBY_LOCATION_HINT,
+            locationHint: SHELBY_LOCATION_HINT,
+          },
         },
         {
           onSuccess: () => {
@@ -511,9 +529,6 @@ const GeneratorSection = () => {
       });
     }
   };
-
-  const isUploading = uploadBlobsMutation.isPending;
-  const isMinting = isSubmittingMint;
 
   return (
     <section id="generator" className="generator-section">

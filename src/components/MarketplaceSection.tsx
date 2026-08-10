@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useWallet } from '@aptos-labs/wallet-adapter-react';
 import { useSignAndSubmitTransaction } from '@aptos-labs/react';
 import { useAccountBlobs, useShelbyClient } from '@shelby-protocol/react';
-import type { BlobMetadata, ShelbyClient } from '@shelby-protocol/sdk/browser';
+import type { ShelbyClient } from '@shelby-protocol/sdk/browser';
 import {
   LEGACY_MARKETPLACE_MODULE,
   MARKETPLACE_MODULE,
@@ -459,7 +459,7 @@ const MarketplaceSection = () => {
     }
 
     if (!isMarketplaceConfigured) {
-      setStatusMessage('Testnet marketplace contract is not configured yet. Publish the contract on testnet, then set VITE_MARKETPLACE_ADDRESS.');
+      setStatusMessage('Shelbynet marketplace contract is not configured yet. Publish the contract on shelbynet, then set VITE_MARKETPLACE_ADDRESS.');
       return;
     }
 
@@ -624,7 +624,7 @@ const MarketplaceSection = () => {
               Refraction
               <select value={selectedBlob} onChange={(event) => setSelectedBlob(event.target.value)}>
                 <option value="">Select saved artwork</option>
-                {availableBlobs.map((blob: BlobMetadata) => (
+                {availableBlobs.map((blob) => (
                   <option key={blob.blobNameSuffix} value={blob.blobNameSuffix}>
                     {formatBlobLabel(blob.blobNameSuffix)}
                   </option>
@@ -680,7 +680,7 @@ const MarketplaceSection = () => {
             <p className="market-note">
               {isMarketplaceConfigured
                 ? 'On-chain listing escrows the NFT object in the marketplace contract.'
-                : 'Testnet marketplace contract is not set yet. Local draft listing is disabled.'}
+                : 'Shelbynet marketplace contract is not set yet. Local draft listing is disabled.'}
             </p>
             {isLoading && <p className="market-note">Loading your Shelby blobs...</p>}
             {statusMessage && <p className="market-status">{statusMessage}</p>}
@@ -700,7 +700,7 @@ const MarketplaceSection = () => {
             {isLoadingMarket ? (
               <div className="market-empty glass-card">
                 <h3>Loading listings</h3>
-                <p>Reading marketplace listings from testnet.</p>
+                <p>Reading marketplace listings from shelbynet.</p>
               </div>
             ) : visibleListings.length > 0 ? (
               visibleListings.map((listing) => {

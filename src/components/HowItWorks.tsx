@@ -18,7 +18,7 @@ const HowItWorks = () => {
       icon: <ChainIcon className="icon" />,
       step: '03',
       title: 'Store and mint',
-      desc: 'Save the artwork to Shelby, then mint from your Aptos wallet on testnet.',
+      desc: 'Save the artwork to Shelby, then mint from your Aptos wallet on shelbynet.',
     },
   ];
 

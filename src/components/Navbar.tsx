@@ -108,22 +108,28 @@ const Navbar = ({ page, appView = 'studio', onAppViewChange }: NavbarProps) => {
             </div>
             <div className="wallet-list">
               {wallets && wallets.length > 0 ? (
-                wallets.map((wallet) => (
-                  <button
-                    key={wallet.name}
-                    className="wallet-item"
-                    onClick={() => {
-                      connect(wallet.name);
-                      setShowModal(false);
-                    }}
-                  >
-                    {wallet.icon && (
-                      <img src={wallet.icon} alt={wallet.name} className="wallet-icon" />
-                    )}
-                    <span>{wallet.name}</span>
-                    <span className="wallet-arrow">-&gt;</span>
-                  </button>
-                ))
+                wallets.map((wallet) => {
+                  const walletMeta = wallet as { name?: string; icon?: string } | undefined;
+                  const walletName = walletMeta?.name ?? 'Wallet';
+                  const walletIcon = walletMeta?.icon;
+
+                  return (
+                    <button
+                      key={walletName}
+                      className="wallet-item"
+                      onClick={() => {
+                        connect(walletName);
+                        setShowModal(false);
+                      }}
+                    >
+                      {walletIcon && (
+                        <img src={walletIcon} alt={walletName} className="wallet-icon" />
+                      )}
+                      <span>{walletName}</span>
+                      <span className="wallet-arrow">-&gt;</span>
+                    </button>
+                  );
+                })
               ) : (
                 <div className="no-wallets">
                   <p>No wallets detected.</p>
